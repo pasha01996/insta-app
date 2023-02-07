@@ -1,0 +1,47 @@
+.user__profile {
+  display: grid;
+  justify-content: center;
+  padding: 40px;
+}
+
+.user__data {
+  height: 150px;
+  width: 800px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.wrap_data {
+  width: 600px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.data__user_email {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.data__user_button {
+  box-sizing: border-box;
+  width: 120px;
+  height: 30px;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.data__user_button:hover {
+  background-color: rgba(130, 130, 130, 0.3019607843);
+}
+
+.data__user_create {
+  width: 90px;
+  height: 32px;
+}
+
+.user__content {
+  background: url("./img/user_content.png");
+  background-size: 100% 100%;
+  height: 450px;
+}

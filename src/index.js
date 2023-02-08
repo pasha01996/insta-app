@@ -15,52 +15,49 @@ import "./styles/table.css"
 import "./styles/edit_form_table.css"
 import "./styles/user_profile.css"
 
-
-
-function cleanPage(id) {
-    const elem = document.getElementById(id)
-    elem.innerHTML = ''
+const creatingHTML = async (wrapper, htmlElem) => {
+    await new Promise((res, rej) => res(document.getElementById(wrapper).replaceWith(htmlElem)))
 }
 
 //--------------------------------------Signin / #------------------------------------
 const callbackFirstPage = async () => {
 
-    cleanPage('wrapper_body')
-    cleanPage('table-users')
-
-
     const htmlElem = document.createElement('div')
-    htmlElem.classList.add('wrapper')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
     htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="wrapper_main">
+    <div class="wrapper">
+        <div class="wrapper_main">
 
-        <div class="side_img"></div>
+            <div class="side_img"></div>
 
-        <div class="form__container form__signin" id="form-container-signin">
+            <div class="form__container form__signin" id="form-container-signin">
 
-            <div class="form_header">
-                <h2 class="form__title">Instagram</h2>
-                <form class="form__signin" id="form-signin" action="#">
-                    <input class="form__input input__signin_email" id="inputEmailSignin" type="email" name="email" placeholder="Email" id="email">
-                    <input class="form__input input__signin_password" id="inputPassSignin" type="password" name="password" placeholder="Password">
-                    <input class="form__button input__signin_submit" id="inputSubmitSignin" type="button" value="Log in">
-                </form>
-                <span class="form__border">Or</span>
-                <span class="form__span_facebook">Login with Facebook</span>
-            </div>
+                <div class="form_header">
+                    <h2 class="form__title">Instagram</h2>
+                    <form class="form__signin" id="form-signin" action="#">
+                        <input class="form__input input__signin_email" id="inputEmailSignin" type="email" name="email" placeholder="Email" id="email">
+                        <input class="form__input input__signin_password" id="inputPassSignin" type="password" name="password" placeholder="Password">
+                        <input class="form__button input__signin_submit" id="inputSubmitSignin" type="button" value="Log in">
+                    </form>
+                    <span class="form__border">Or</span>
+                    <span class="form__span_facebook">Login with Facebook</span>
+                </div>
 
-            <div class="form__footer">
-                <span class="form__text">Have no account yet?</span>
-                <a href="#signup" class="form__link_switch" id="switch-signin">Sign up</a>
+                <div class="form__footer">
+                    <span class="form__text">Have no account yet?</span>
+                    <a href="#signup" class="form__link_switch" id="switch-signin">Sign up</a>
+                </div>
+
             </div>
 
         </div>
 
+        <div class="footer_img"></div>
     </div>
-
-    <div class="footer_img"></div>
     `)
-    await new Promise((res, rej) => res(document.getElementById('wrapper_body').append(htmlElem)))
+
+    creatingHTML('wrapper_body', htmlElem)
 
     
 
@@ -92,37 +89,38 @@ const callbackFirstPage = async () => {
 //--------------------------------------------Signup--------------------------------------------
 const callbackSignupForm = async () => {
 
-    cleanPage('wrapper_body')
-    cleanPage('table-users')
-
     const htmlElem = document.createElement('div')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
     htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="form__container form__signup" id="form-container-signin">
+    <div class="wrapper">
+        <div class="form__container form__signup" id="form-container-signin">
 
-        <div class="form_header">
-            <h2 class="form__title">Instagram</h2>
-            <span class="form__title_description">Register to see photos and videos of your friends.</span>
-            <button class="form__button"><span class="form__span_facebook">Login with Facebook</span></button>
-            <span class="form__border">Or</span>
-            <form class="form__signin" id="form-signin" action="#">
-                <input class="form__input" id="inputEmailSignup" type="email" name="email" placeholder="Email" id="email">
-                <input class="form__input" id="inputPassSignup" type="password" name="password" placeholder="Password">
-                <input class="form__input" id="inputPhoneSignup" type="tel" name="phone" placeholder="Phone">
-                <input class="form__input" id="inputCountrySignup" type="text" name="country" placeholder="Country">
-                <input class="form__button" id="inputSubmitSignup" type="submit" value="Registration">
-            </form>
-            <span class="form__span_facebook">Login with Facebook</span>
+            <div class="form_header">
+                <h2 class="form__title">Instagram</h2>
+                <span class="form__title_description">Register to see photos and videos of your friends.</span>
+                <button class="form__button"><span class="form__span_facebook">Login with Facebook</span></button>
+                <span class="form__border">Or</span>
+                <form class="form__signin" id="form-signin" action="#">
+                    <input class="form__input" id="inputEmailSignup" type="email" name="email" placeholder="Email" id="email">
+                    <input class="form__input" id="inputPassSignup" type="password" name="password" placeholder="Password">
+                    <input class="form__input" id="inputPhoneSignup" type="tel" name="phone" placeholder="Phone">
+                    <input class="form__input" id="inputCountrySignup" type="text" name="country" placeholder="Country">
+                    <input class="form__button" id="inputSubmitSignup" type="submit" value="Registration">
+                </form>
+                <span class="form__span_facebook">Login with Facebook</span>
+            </div>
+
+            <div class="form__footer">
+                <span class="form__text">Have an account?</span>
+                <a href="#" class="form__link_switch">Sign in</a>
+            </div>
+
         </div>
-
-        <div class="form__footer">
-            <span class="form__text">Have an account?</span>
-            <a href="#" class="form__link_switch">Sign in</a>
-        </div>
-
     </div>
     `)
 
-    await new Promise((res, rej) => res(document.getElementById('wrapper_body').append(htmlElem))) 
+    creatingHTML('wrapper_body', htmlElem)
     
     
     const inputSubmitSignup = document.getElementById('inputSubmitSignup')
@@ -151,35 +149,35 @@ const callbackSignupForm = async () => {
 //-------------------------------------------Main-----------------------------------------------
 const callbackMainPage = async () => {
 
-    cleanPage('wrapper_body')
-    cleanPage('table-users')
-
-
     const htmlElem = document.createElement('div')
-    htmlElem.classList.add('wrapper')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
     htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="div">
-        <div class="wrapper_header">
-            <header class="header">
-                <h1 class="header__title">Instagram</h1>
-                <nav class="header__nav">
-                    <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
-                    <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
-                    <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
-                    <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
-                    <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
-                    <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
-                    <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
-                    <button class="header__button" id="header-button-profile"><span class="nav__span nav__span_profile">Profile</span></button>
-                    <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
-                </nav>
-            </header>
-        </div> 
+    <div class="wrapper">
+        <div class="div">
+            <div class="wrapper_header">
+                <header class="header">
+                    <h1 class="header__title">Instagram</h1>
+                    <nav class="header__nav">
+                        <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
+                        <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
+                        <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                        <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
+                        <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
+                        <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
+                        <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
+                        <button class="header__button" id="header-button-profile"><span class="nav__span nav__span_profile">Profile</span></button>
+                        <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
+                    </nav>
+                </header>
+            </div> 
 
-        <div class="content"></div>
+            <div class="content"></div>
+        </div>
     </div>
     `)
-    await new Promise((res, rej) => res(document.getElementById('wrapper_body').append(htmlElem)))
+
+    creatingHTML('wrapper_body', htmlElem)
 
     const headerButtonProfile = document.getElementById('header-button-profile')
     headerButtonProfile.addEventListener('click', () => {location.href = '#profile'})
@@ -189,49 +187,51 @@ const callbackMainPage = async () => {
 
 //------------------------------------------Profile---------------------------------------------
 const callbackProfile = async () => {
+
     const user = sessionStorage.getItem('whoAuthorized')
-    cleanPage('wrapper_body')
-    cleanPage('table-users')
 
     const htmlElem = document.createElement('div')
-    htmlElem.classList.add('div_wrap')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
     htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="wrapper_header">
-        <header class="header">
-            <h1 class="header__title">Instagram</h1>
-            <nav class="header__nav">
-                <button class="header__button"><span class="nav__span nav__span_main">Main</span></button>
-                <button class="header__button"><span class="nav__span nav__span_search">Search</span></button>
-                <button class="header__button"><span class="nav__span nav__span_interesting">Interesting</span></button>
-                <button class="header__button"><span class="nav__span nav__span_messages">Messages</span></button>
-                <button class="header__button"><span class="nav__span nav__span_reels">Reels</span></button>
-                <button class="header__button"><span class="nav__span nav__span_notification">Notification</span></button>
-                <button class="header__button"><span class="nav__span nav__span_create">Create</span></button>
-                <button class="header__button"><span class="nav__span nav__span_profile">Profile</span></button>
-                <button class="header__button header__button_last"><span class="nav__span nav__span_more">More</span></button>
-            </nav>
-        </header>
-    </div> 
+    <div class="div_wrap">
+        <div class="wrapper_header">
+            <header class="header">
+                <h1 class="header__title">Instagram</h1>
+                <nav class="header__nav">
+                    <button class="header__button"><span class="nav__span nav__span_main">Main</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_search">Search</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_messages">Messages</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_reels">Reels</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_notification">Notification</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_create">Create</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_profile">Profile</span></button>
+                    <button class="header__button header__button_last"><span class="nav__span nav__span_more">More</span></button>
+                </nav>
+            </header>
+        </div> 
 
-    <div class="user__profile">
+        <div class="user__profile">
 
-        <div class="user__data">
-            <img src="" alt="unknown_user">
-            <div class="wrap_data">
-                <span class="data__user_email">${user}</span>
-                <button class="data__user_button">Edit profile</button>
-                <button class="data__user_button">Advertising Tools</button>
-                <button class="data__user_create">Create post</button>
+            <div class="user__data">
+                <img src="" alt="unknown_user">
+                <div class="wrap_data">
+                    <span class="data__user_email">${user}</span>
+                    <button class="data__user_button">Edit profile</button>
+                    <button class="data__user_button">Advertising Tools</button>
+                    <button class="data__user_create">Create post</button>
+                </div>
             </div>
+
+            <div class="user__content"></div>
+
         </div>
-
-        <div class="user__content"></div>
-
     </div>
 
-
     `)
-    await new Promise((res, rej) => res(document.getElementById('wrapper_body').append(htmlElem)))
+    
+    creatingHTML('wrapper_body', htmlElem)
 
 
 
@@ -241,8 +241,6 @@ const callbackProfile = async () => {
 const callbackTable = async () => {
 
     const check = sessionStorage.getItem('isAuthorized')
-    cleanPage('wrapper_body')
-    cleanPage('table-users')
 
     async function sendGETRequest(url) {
         return await fetch(url).then(response => { return response.json() })

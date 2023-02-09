@@ -21,6 +21,16 @@ export class Page {
         }).then(response => { return response.json() })
     }
 
+    async sendPUTRequest(url, body) {
+        return await fetch(url, {
+            method: 'PUT',
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            cache: 'default'
+        }).then(response => { return response.json() })
+    }
+
     async sendGETRequest(url) {
         return await fetch(url).then(response => { return response.json() })
     }
@@ -34,8 +44,6 @@ export class Page {
             body: formData
         })
     }
-    
-
     async registration(event) {
         event.preventDefault()
 
@@ -45,11 +53,9 @@ export class Page {
         }
 
         if (this.elements.formSignup.isValidForm()) {
-
-        this.sendPOSTRequest('http://localhost:3000/user', userData)
+            this.sendPOSTRequest('http://localhost:3000/users', userData)
             console.log('isRegistered = true')
             isRegistered = true
-
         } else {
             console.log('isRegistered = false')
             isRegistered = false 
@@ -58,30 +64,25 @@ export class Page {
 
     async authorization(event) {
         event.preventDefault()
-
         const userData = {}
         for (let i = 0; i < this.elements.formSignin.inputs.length; i++) { 
             userData[this.elements.formSignin.getAttributes()[i]] = this.elements.formSignin.getValues()[i]
         }   
 
         if (this.elements.formSignin.isValidForm()) {
-
             await this.sendGETRequest('http://localhost:3000/users')
                 .then(data => this.users = data)
-
             const findUser = this.users.find(elem => elem.email === userData.email && elem.password === userData.password)
-            if (findUser !== undefined) { isAuthorized = true } else { isAuthorized = false }
-
-
-            sessionStorage.setItem('isAuthorized', isAuthorized)
-            sessionStorage.setItem('whoAuthorized', findUser.email)
-           
-            console.log(isAuthorized)
-            console.log('isAuthorization = true')
-        
+            if (findUser !== undefined) { 
+                isAuthorized = true 
+                sessionStorage.setItem('whoAuthorized', JSON.stringify(findUser))
+                sessionStorage.setItem('isAuthorized', isAuthorized)
+            } else { 
+                isAuthorized = false 
+            }
+            console.log('isAuthorization =',  isAuthorized) 
         } else {
-            console.log(isAuthorized)
-            console.log('isAuthorization = false') 
+            console.log('isAuthorization =', isAuthorized) 
         }
 }
 
@@ -128,18 +129,15 @@ export class Page {
 
     async onclickEditTable() {
 
-        await this.sendGETRequest('http://localhost:3000/getusers')
-                .then(data => this.users = data)
-
+        const user = JSON.parse(sessionStorage.getItem('whoAuthorized')) 
+        console.log(user)
         const userData = {}
         for (let i = 0; i < this.elements.formEditTable.inputs.length; i++) { 
             userData[this.elements.formEditTable.getAttributes()[i]] = this.elements.formEditTable.getValues()[i]
         }
-
-        const findUser = this.users.findIndex(user => user.email === sessionStorage.getItem('userWhoEdit'))
-        this.users[findUser] = userData
-
-        this.sendPOSTRequest('http://localhost:3000/overwriteuser', this.users)
+        console.log(userData)
+        this.sendPUTRequest(`http://localhost:3000/users/${user.id}`, userData)
+        sessionStorage.setItem('whoAuthorized', JSON.stringify(userData))
     }
 
     

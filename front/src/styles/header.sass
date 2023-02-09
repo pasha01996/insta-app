@@ -13,6 +13,8 @@
     width: 220px
 
 .header__button
+    display: flex
+    align-items: center
     background: none
     border: none
     cursor: pointer
@@ -36,9 +38,6 @@
     background-image: url('./img/like.png')
 .nav__span_create::before
     background-image: url('./img/create-post.png')
-.nav__span_profile::before
-    background-image: url('./img/unknown_user.jpg')
-    border-radius: 50%
 .nav__span_more::before
     background-image: url('./img/menu-burger.png')
 .nav__span::before
@@ -47,7 +46,18 @@
     height: 24px
     background-size: 100%
     content: ''
-
+.nav__span_profile::before
+    margin-right: 0
+    width: 0px
+    height: 0px
+    content: ''
+.nav__span_profile
+    margin-left: 13px
+.header_user_avatar
+    width: 24px
+    height: 24px
+    background-size: 100% 100%
+    border-radius: 50%
 
 
 

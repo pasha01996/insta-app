@@ -1,0 +1,1 @@
+[{"email":"x4i8i15i16i23i42@gmail.com","password":"asasdSADASDASD","phone":"+375298903095","country":"asdasdasdasd","id":1,"imgURL":"http://localhost:3030/uploads/x4i8i15i16i23i42@gmail.com.JPG"}]

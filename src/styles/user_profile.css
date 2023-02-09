@@ -5,7 +5,7 @@
 }
 
 .user__data {
-  height: 150px;
+  height: 100px;
   width: 800px;
   display: flex;
   justify-content: space-between;
@@ -15,6 +15,11 @@
   width: 600px;
   display: flex;
   justify-content: space-between;
+}
+
+.user__avatar {
+  width: 100px;
+  height: 100px;
 }
 
 .data__user_email {
@@ -38,6 +43,12 @@
 .data__user_create {
   width: 90px;
   height: 32px;
+  cursor: pointer;
+  background-color: rgba(130, 130, 130, 0.3019607843);
+}
+
+.data__user_create:hover {
+  background-color: rgba(130, 130, 130, 0.4274509804);
 }
 
 .user__content {

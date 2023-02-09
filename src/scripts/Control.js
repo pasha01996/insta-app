@@ -5,7 +5,7 @@ export class Control {
         this.checks = checks
         this.elementLink = document.getElementById(id)
         // this.attribute = this.elementLink.getAttribute("name")
-        this.inputsCheck = this.elementLink.querySelectorAll('input')
+        this.inputsCheck = this.elementLink.querySelectorAll('.input')
     }
 
     startChecks() {

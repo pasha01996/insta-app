@@ -24,6 +24,16 @@ export class Page {
     async sendGETRequest(url) {
         return await fetch(url).then(response => { return response.json() })
     }
+
+    async sendImage(input) {
+        const formData = new FormData()
+        formData.append('avatar', input.files[0])
+        formData.append('filename', input.name)
+        return await fetch('http://localhost:3000/uploads', {
+            method: 'POST',
+            body: formData
+        })
+    }
     
 
     async registration(event) {
@@ -36,7 +46,7 @@ export class Page {
 
         if (this.elements.formSignup.isValidForm()) {
 
-        this.sendPOSTRequest('http://localhost:3000/writeuser', userData)
+        this.sendPOSTRequest('http://localhost:3000/user', userData)
             console.log('isRegistered = true')
             isRegistered = true
 

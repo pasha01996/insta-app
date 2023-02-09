@@ -4,19 +4,19 @@
     // const formAvatar = document.getElementById('form-avatar')
 
 
-    // async function sendPOST(url, imput, container) {
+    async function sendPOST(url, imput) {
         
-    //     const formData = new FormData()
-    //     formData.append('avatar', imput.files[0])
-    //     formData.append('filename', imput.name)
-    //     return await fetch(url, {
-    //         method: 'POST',
-    //         body: formData
-    //     })
-    //     .then(response =>  response.json())
-    //     .then(data => `<img width="150px" height="150px" src="http://localhost:3000/uploads/${data.filename}.JPG" alt="">`)
-    //     .then(data => container.innerHTML = data)
-    // }
+        const formData = new FormData()
+        formData.append('avatar', imput.files[0])
+        formData.append('filename', imput.name)
+        return await fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response =>  response.json())
+        .then(data => `<img width="150px" height="150px" src="http://localhost:3000/uploads/${data.filename}.JPG" alt="">`)
+        
+    }
 
 
 

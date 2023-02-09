@@ -15,6 +15,12 @@ import "./styles/table.css"
 import "./styles/edit_form_table.css"
 import "./styles/user_profile.css"
 
+
+//-------------------------------------Modal-----------------------------------------
+
+
+
+
 const creatingHTML = async (wrapper, htmlElem) => {
     await new Promise((res, rej) => res(document.getElementById(wrapper).replaceWith(htmlElem)))
 }
@@ -144,7 +150,7 @@ const callbackSignupForm = async () => {
         page.registration(event)
         if (isRegistered) {location.hash = '#'}
     })
-}
+}   
 
 //-------------------------------------------Main-----------------------------------------------
 const callbackMainPage = async () => {
@@ -154,7 +160,7 @@ const callbackMainPage = async () => {
     htmlElem.setAttribute('id', 'wrapper_body')
     htmlElem.insertAdjacentHTML('afterbegin', `
     <div class="wrapper">
-        <div class="div">
+        <div class="div_wrap">
             <div class="wrapper_header">
                 <header class="header">
                     <h1 class="header__title">Instagram</h1>
@@ -188,6 +194,7 @@ const callbackMainPage = async () => {
 //------------------------------------------Profile---------------------------------------------
 const callbackProfile = async () => {
 
+    const check = sessionStorage.getItem('isAuthorized')
     const user = sessionStorage.getItem('whoAuthorized')
 
     const htmlElem = document.createElement('div')
@@ -218,9 +225,9 @@ const callbackProfile = async () => {
                 <img src="" alt="unknown_user">
                 <div class="wrap_data">
                     <span class="data__user_email">${user}</span>
-                    <button class="data__user_button">Edit profile</button>
+                    <button class="data__user_button" id="user-button-edit">Edit profile</button>
                     <button class="data__user_button">Advertising Tools</button>
-                    <button class="data__user_create">Create post</button>
+                    <button class="data__user_create" id="user-button-create">Create post</button>
                 </div>
             </div>
 
@@ -230,10 +237,12 @@ const callbackProfile = async () => {
     </div>
 
     `)
-    
     creatingHTML('wrapper_body', htmlElem)
 
+    const userButtonEdit = document.getElementById('user-button-edit')
+    const userButtonCreate = document.getElementById('user-button-create')
 
+    userButtonEdit.addEventListener('click', () => location.hash = '#edittable')
 
 }
 
@@ -324,53 +333,132 @@ const callbackTable = async () => {
 
 //-------------------------------------------Edit-Table-------------------------------------
 const callbackEditTable = async () => {
-    const userWhoEdit = sessionStorage.getItem('userWhoView')
+
     const check = sessionStorage.getItem('isAuthorized')
-    cleanPage('form-wrapper')
-    cleanPage('table-users')
+    const user = sessionStorage.getItem('whoAuthorized')
+    
 
-//----код ниже создает табличку для ощущения нахождения на той же странице
-    // if(check) {
-    //     async function sendGETRequest(url) {
-    //         return await fetch(url).then(response => { return response.json() })
-    //     }
+    const htmlElem = document.createElement('div')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
+    htmlElem.insertAdjacentHTML('afterbegin', `
+    <div class="div_wrap">
+        <div class="wrapper_header">
+            <header class="header">
+                <h1 class="header__title">Instagram</h1>
+                <nav class="header__nav">
+                    <button class="header__button"><span class="nav__span nav__span_main">Main</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_search">Search</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_messages">Messages</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_reels">Reels</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_notification">Notification</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_create">Create</span></button>
+                    <button class="header__button"><span class="nav__span nav__span_profile">Profile</span></button>
+                    <button class="header__button header__button_last"><span class="nav__span nav__span_more">More</span></button>
+                </nav>
+            </header>
+        </div> 
 
-    //     function createTable(users, container) {
-    //         if (users) {
-    //             for(let i = 0; i < users.length; i++) {
-    //                 createCell(users[i].email, container)
-    //             }
-    //         }  
-    //     }
+        <div class="user__profile">
 
-    //     function createCell(userEmail, container) {
-    //         const elem = document.getElementById(container)
-    //         if (userEmail) { 
-    //             return elem.insertAdjacentHTML('afterbegin', `
-    //             <div class="table__user">
-    //                 <span class="item__description">user:</span>
-    //                 <span class="item__name">${userEmail}</span>
-    //                 <div class="item__buttons">
-    //                     <button class="table_btn_edit" data-table-btn-edit="${userEmail}">edit</button>
-    //                     <button class="table_btn_delete" data-table-btn-delete="${userEmail}">delete</button>
-    //                     <button class="table_btn_view" data-table-btn-view="${userEmail}">view</button>
-    //                 </div>
-    //             </div>
-    //             `)  
-    //         }
-    //     }
+            <div class="user__data">
+                <div class="user__avatar" id="user-avatar"></div>
+                <div class="wrap_data">
+                    <span class="data__user_email">${user}</span>
+                    <button class="data__user_button" id="user-button-edit">Edit profile</button>
+                    <button class="data__user_button">Advertising Tools</button>
+                    <button class="data__user_create" id="user-button-create">Create post</button>
+                </div>
+            </div>
 
-    //     await sendGETRequest('http://localhost:3000/getusers')
-    //         .then(data => createTable(data, 'table-users'))
+            <div class="modal__table_inputs">
+                <form class="modal_table_form" id="modal-table-form" action="#">  
+                    <div class="table_div"> 
+                        <span class="table__span">avatar:</span>
+                        <input class="table__button button_avatar" id="up-file" name="${user}" type="file">
+                    </div>
 
-        
-    // }   
+                    <div class="table_div">
+                        <span class="table__span">email:</span>
+                        <input class="table__input table__input_email input" id="inputEmailEdit" name="email" type="email" placeholder="Email">
+                    </div>
+                    <div class="table_div">
+                        <span class="table__span">pass:</span>
+                        <input class="table__input table__input_password input" id="inputPassEdit" name="password" type="text"  placeholder="Password">
+                    </div>
+                    <div class="table_div">
+                        <span class="table__span">phone:</span>
+                        <input class="table__input table__input_phone input" id="inputPhoneEdit" name="phone" type="text" placeholder="Phone">
+                    </div>
+                    <div class="table_div">
+                        <span class="table__span">country:</span>
+                        <input class="table__input table__input_country input" id="inputCountryEdit" name="country" type="text" placeholder="Country">
+                    </div>
+                    <div class="table_div">
+                        <span class="table__span">gender:</span>
+                        <select class="table__input input" name="gender" id="gender-select">
+                            <option value="male">male</option>
+                            <option value="woman">woman</option>
+                        </select>
+                    </div>
 
-    const tableBtnEditEl = document.querySelector('#tableBody')
-    const tableBtnDeleteEl = document.querySelector('#tableBtnDelete')
-    const tableBtnViewEl = document.querySelector('.table_btn_view')
-    const tableUsers = document.querySelector('#table-users')
 
+                    <div class="table_div" name="checkbox" id="checkbox-interests">
+                        <span class="table__span">Interests:</span>
+                        <div>
+                            <div class="table__input">
+                                <input type="checkbox" id="first-checkbox" value="first checkbox">
+                                <label for="first-checkbox">first checkbox</label>
+                            </div>
+                            <div class="table__input">
+                                <input type="checkbox" id="second-checkbox" value="second checkbox">
+                                <label for="second-checkbox">second checkbox</label>
+                            </div>
+                            <div class="table__input">
+                                <input type="checkbox" id="third-checkbox" value="third checkbox">
+                                <label for="third-checkbox">third checkbox</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table_div">
+                        <span class="table__span">Marital status:</span>
+                        <div class="table__input  radio_container" name="status" id="radio-marital-status" data-radio-container>
+                            <input class="radio_married" type="radio" name="marital-status" value="married">
+                            <input class="radio_single" type="radio" name="marital-status" value="single">
+                        </div>
+                    </div>
+                    
+                    <div class="table_div">
+                        <span class="table__span">color:</span>
+                        <input class="input__color input" type="color" name="color" id="color-mail">
+                    </div>
+
+                    <div class="table_div">
+                        <span class="table__span">About you:</span>
+                        <textarea class="table__input input" id="description" name="description" placeholder="Tell about yourself:" rows="5" cols="33"></textarea>
+                    </div>
+                    <div class="table_div">
+                        <span class="table__span">Age:</span>
+                        <input class="table__input input" type="number" name="age" id="age-user">
+                    </div>
+                </form>
+
+                <button class="table__button" data-table-btn-confirmedit="${user}">edit</button>
+                <button class="table__button button_close" id="table-button-close">close</button>
+            </div>
+
+        </div>
+    </div>
+
+    `)
+    creatingHTML('wrapper_body', htmlElem)
+
+    const userAvatar = document.getElementById('user-avatar')
+    const upFile = document.getElementById('up-file')
+
+    const tableButtonClose = document.getElementById('table-button-close')
     const modalConteiner = document.querySelector('#modalConteiner')
     const modalText = document.querySelector('#modalText')
     const modalContent = document.querySelector('#modalContent')
@@ -378,65 +466,57 @@ const callbackEditTable = async () => {
     const forEditTable = document.querySelector('#for-edit-table')
 
     const tableOption = {
-        container: tableUsers,
-        btn: {edit: tableBtnEditEl, delete: tableBtnDeleteEl, view: tableBtnViewEl},
         modal: {container: modalConteiner, forEditTable: forEditTable,content: modalContent, text: modalText, btn: modalBtn, textValue: ''},
     }
-
     const pageOptions = { elements: {table: new Table('table-users', tableOption)} }
-
     const page = new Page(pageOptions)
     
-
-
-    //--тут проблемки---------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//     const formOptionEditTadle = () => {
-//         inputs: [new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]), 
-//                 new Control('inputPassEdit', [checks.minLengthEight]),
-//                 new Control('inputPhoneEdit', [checks.minLengthEight, checks.firstLetterPlus]),
-//                 new Control('inputCountryEdit', [checks.minLengthEight]),
-//                 new Control('radio-marital-status', 'not checks'),
-//                 new Control('gender-select', 'not checks'),
-//                 new Control('color-mail', 'not checks'),
-//                 new Control('description', 'not checks'),
-//                 new Control('age-user', 'not checks'),
-//                 new Control('checkbox-interests', 'not checks')]
-//    }
-
-    let iseditTable = page.elements.table.editTableItem(userWhoEdit, check)   
-    if (iseditTable) {
-        const formOptionEditTadle = {
-            inputs: [new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]), 
-                    new Control('inputPassEdit', [checks.minLengthEight]),
-                    new Control('inputPhoneEdit', [checks.minLengthEight, checks.firstLetterPlus]),
-                    new Control('inputCountryEdit', [checks.minLengthEight]),
-                    new Control('radio-marital-status', 'not checks'),
-                    new Control('gender-select', 'not checks'),
-                    new Control('color-mail', 'not checks'),
-                    new Control('description', 'not checks'),
-                    new Control('age-user', 'not checks'),
-                    new Control('checkbox-interests', 'not checks')]
-        }
-        page.elements.formEditTable = new Form('form-container-edit', formOptionEditTadle)
+    const formOptionEditTadle = {
+        inputs: [new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]),
+                new Control('inputPassEdit', [checks.minLengthEight]),
+                new Control('inputPhoneEdit', [checks.minLengthEight, checks.firstLetterPlus]),
+                new Control('inputCountryEdit', [checks.minLengthEight]),
+                new Control('radio-marital-status', 'not checks'),
+                new Control('gender-select', 'not checks'),
+                new Control('color-mail', 'not checks'),
+                new Control('description', 'not checks'),
+                new Control('age-user', 'not checks'),
+                new Control('checkbox-interests', 'not checks')
+            ]
     }
+    page.elements.formEditTable = new Form('form-container-edit', formOptionEditTadle)
+    
+    upFile.addEventListener('change', async () => {
+        const img = upFile.files[0]
+        
+        const reader = new FileReader()
+        reader.readAsDataURL(img)
+        reader.onload = () => {
+            const url = reader.result
+            const img = new Image()
+            img.src = url
+            userAvatar.appendChild(img)
+        }
+        
+        await page.sendImage(upFile)
+    })
+    
 
 //-------код ниже для работы модального окна 
-    
-    //------работает
     page.elements.table.modal.btn.addEventListener('click', () => {
-        page.deleteEditForm()
         page.elements.table.closeModal()
-        location.hash = '#table'
+        location.hash = '#profile'
     })
 
     page.elements.table.modal.container.addEventListener('click', async (event) => {
         if(event.target.dataset.tableBtnConfirmedit) {
             await page.onclickEditTable()
-            page.deleteEditForm()
             page.elements.table.closeModal()
-            location.hash = '#table'
+            location.hash = '#profile'
         }
     })
+
+    tableButtonClose.addEventListener('click', () => location.hash = '#profile')
  }
 
  //-------------------------------------------View-Table-------------------------------------

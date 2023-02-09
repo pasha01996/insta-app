@@ -71,6 +71,82 @@
 
 
 
+<div class="modal__table_inputs">
+    <form class="modal_table_form" id="modal-table-form" action="#">  
+        <div class="table_div"> 
+            <span class="table__span">avatar:</span>
+            <input class="table__button button_avatar" id="up-file" type="file">
+        </div>
+
+        <div class="table_div">
+            <span class="table__span">email:</span>
+            <input class="table__input table__input_email" id="inputEmailEdit" name="email" type="email" placeholder="Email">
+        </div>
+        <div class="table_div">
+            <span class="table__span">pass:</span>
+            <input class="table__input table__input_password" id="inputPassEdit" name="password" type="text"  placeholder="Password">
+        </div>
+        <div class="table_div">
+            <span class="table__span">phone:</span>
+            <input class="table__input table__input_phone" id="inputPhoneEdit" name="phone" type="text" placeholder="Phone">
+        </div>
+        <div class="table_div">
+            <span class="table__span">country:</span>
+            <input class="table__input table__input_country" id="inputCountryEdit" name="country" type="text" placeholder="Country">
+        </div>
+        <div class="table_div">
+            <span class="table__span">gender:</span>
+            <select class="table__input" name="gender" id="gender-select">
+                <option value="male">male</option>
+                <option value="woman">woman</option>
+            </select>
+        </div>
+
+
+        <div class="table_div" name="checkbox" id="checkbox-interests">
+            <span class="table__span">Interests:</span>
+            <div>
+                <div class="table__input">
+                    <input type="checkbox" id="first-checkbox" value="first checkbox">
+                    <label for="first-checkbox">first checkbox</label>
+                </div>
+                <div class="table__input">
+                    <input type="checkbox" id="second-checkbox" value="second checkbox">
+                    <label for="second-checkbox">second checkbox</label>
+                </div>
+                <div class="table__input">
+                    <input type="checkbox" id="third-checkbox" value="third checkbox">
+                    <label for="third-checkbox">third checkbox</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="table_div">
+            <span class="table__span">Marital status:</span>
+            <div class="table__input  radio_container" name="status" id="radio-marital-status" data-radio-container>
+                <input class="radio_married" type="radio" name="marital-status" value="married">
+                <input class="radio_single" type="radio" name="marital-status" value="single">
+            </div>
+        </div>
+        
+        <div class="table_div">
+            <span class="table__span">color:</span>
+            <input class="input__color" type="color" name="color" id="color-mail">
+        </div>
+
+        <div class="table_div">
+            <span class="table__span">About you:</span>
+            <textarea class="table__input id="description" name="description" placeholder="Tell about yourself:" rows="5" cols="33"></textarea>
+        </div>
+        <div class="table_div">
+            <span class="table__span">Age:</span>
+            <input class="table__input" type="number" name="age" id="age-user">
+        </div>
+    </form>
+
+    <button class="table__button" data-table-btn-confirmedit="${userEmail}">edit</button>
+</div>
+
  <!-- <div class="form__wrapper" id="form-wrapper">
         <div id="main">
             <h1>Main Page</h1>

@@ -14,18 +14,40 @@ import "./styles/form.css"
 import "./styles/table.css"
 import "./styles/edit_form_table.css"
 import "./styles/user_profile.css"
+import "./styles/create_post.css"
+import "./styles/interesting.css"
 
-
-//-------------------------------------Modal-----------------------------------------
-
+//-------------------------------------functions-----------------------------------------
 
 const sendGETRequest = async (url) => {
     return await fetch(url).then(response => { return response.json() })
 }
 
+const sendPostImage = async (input, inputText, url) => {
+    const formData = new FormData()
+    formData.append('post', input.files[0])
+    formData.append('filename', input.name)
+    formData.append('description', inputText.value)
+    await fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+}
+
 const creatingHTML = async (wrapper, htmlElem) => {
     await new Promise((res, rej) => res(document.getElementById(wrapper).replaceWith(htmlElem)))
 }
+
+const creatUserPosts = async (wrapper, url, description) => {
+    const htmlElem = document.createElement('div')
+    htmlElem.classList.add('user__post')
+    htmlElem.insertAdjacentHTML('afterbegin', `
+        <img class="user__img_post" src="${url}" alt="${description}">
+        <div class="user_description_post">${description}</div>
+    `)
+    await wrapper.append(htmlElem)
+}
+ 
 
 //--------------------------------------Signin / #------------------------------------
 const callbackFirstPage = async () => {
@@ -194,7 +216,58 @@ const callbackMainPage = async () => {
 
     
     const headerButtonProfile = document.getElementById('header-button-profile')
-    headerButtonProfile.addEventListener('click', () => {location.href = '#profile'})
+    const headerButtonInteresting = document.getElementById('header-button-interesting')
+    headerButtonInteresting.addEventListener('click', () => location.hash = '#interesting')
+    headerButtonProfile.addEventListener('click', () => location.href = '#profile')
+
+
+}
+
+//------------------------------------------Interesting------------------------------------------
+const callbackInteresting = async () => {
+
+    const htmlElem = document.createElement('div')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
+    htmlElem.insertAdjacentHTML('afterbegin', `
+    <div class="wrapper">
+        <div class="div_wrap">
+            <div class="wrapper_header">
+                <header class="header">
+                    <h1 class="header__title">Instagram</h1>
+                    <nav class="header__nav">
+                        <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
+                        <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
+                        <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                        <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
+                        <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
+                        <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
+                        <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
+                        <button class="header__button" id="header-button-profile"><div class="header_user_avatar" id="div-user-profile"></div><span class="nav__span nav__span_profile" >Profile</span></button>
+                        <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
+                    </nav>
+                </header>
+            </div> 
+
+            <div class="user__posts" id="all-users-posts"></div>
+        </div>
+    </div>
+    `)
+    creatingHTML('wrapper_body', htmlElem)
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id 
+    const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`) 
+    const divUserProfile = document.getElementById('div-user-profile')
+    if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
+    divUserProfile.style.backgroundImage = `url(${user.imgURL})`
+
+    const allUsersPosts = document.getElementById('all-users-posts')
+    const allPosts = await sendGETRequest(`http://localhost:3000/posts`)
+    await allPosts.forEach(post => creatUserPosts(allUsersPosts, post.img, post.description))
+    
+    const headerButtonProfile = document.getElementById('header-button-profile')
+    const headerButtonInteresting = document.getElementById('header-button-interesting')
+    headerButtonInteresting.addEventListener('click', () => location.hash = '#interesting')
+    headerButtonProfile.addEventListener('click', () => location.href = '#profile')
 
 }
 
@@ -212,18 +285,18 @@ const callbackProfile = async () => {
             <header class="header">
                 <h1 class="header__title">Instagram</h1>
                 <nav class="header__nav">
-                    <button class="header__button"><span class="nav__span nav__span_main">Main</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_search">Search</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_interesting">Interesting</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_messages">Messages</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_reels">Reels</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_notification">Notification</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_create">Create</span></button>
+                    <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
+                    <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
+                    <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                    <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
+                    <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
+                    <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
+                    <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
                     <button class="header__button" id="header-button-profile"><div class="header_user_avatar" id="div-user-profile"></div><span class="nav__span nav__span_profile" >Profile</span></button>
-                    <button class="header__button header__button_last"><span class="nav__span nav__span_more">More</span></button>
+                    <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
                 </nav>
             </header>
-        </div> 
+         </div> 
 
         <div class="user__profile">
 
@@ -237,7 +310,83 @@ const callbackProfile = async () => {
                 </div>
             </div>
 
-            <div class="user__content"></div>
+            <div class="user__content" id="user-content"></div>
+
+        </div>
+    </div>
+
+    `)
+    creatingHTML('wrapper_body', htmlElem)
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id
+    const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
+    const divUserAvatar = document.getElementById('div-user-avatar')
+    const divUserProfile = document.getElementById('div-user-profile')
+    if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
+    divUserAvatar.style.backgroundImage = `url(${user.imgURL})` 
+    divUserProfile.style.backgroundImage = `url(${user.imgURL})`
+
+    const userContent = document.getElementById('user-content')
+    const userPosts = await sendGETRequest(`http://localhost:3000/posts/${idUser}`)
+    userPosts.forEach( post => creatUserPosts(userContent, post.img, post.description))
+    
+    
+    
+    
+    const userButtonEdit = document.getElementById('user-button-edit')
+    const userButtonCreate = document.getElementById('user-button-create')
+    const headerButtonInteresting = document.getElementById('header-button-interesting')
+    const headerButtonProfile = document.getElementById('header-button-profile')
+    headerButtonProfile.addEventListener('click', () => location.hash = '#profile')
+    userButtonCreate.addEventListener('click', () => location.hash = '#createpost')
+    userButtonEdit.addEventListener('click', () => location.hash = '#edittable')
+    headerButtonInteresting.addEventListener('click', () => location.hash = '#interesting')
+
+}
+
+//-------------------------------------------Create Post-------------------------------------
+const callbackCreatePost = async () => {
+    const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
+
+    const htmlElem = document.createElement('div')
+    htmlElem.classList.add('wrapper_body')
+    htmlElem.setAttribute('id', 'wrapper_body')
+    htmlElem.insertAdjacentHTML('afterbegin', `
+    <div class="div_wrap">
+        <div class="wrapper_header">
+            <header class="header">
+                <h1 class="header__title">Instagram</h1>
+                <nav class="header__nav">
+                    <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
+                    <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
+                    <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                    <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
+                    <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
+                    <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
+                    <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
+                    <button class="header__button" id="header-button-profile"><div class="header_user_avatar" id="div-user-profile"></div><span class="nav__span nav__span_profile" >Profile</span></button>
+                    <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
+                </nav>
+            </header>
+        </div>
+
+        <div class="user__profile">
+
+            <div class="user__data">
+                <div class="div_user_avatar" id="div-user-avatar"></div>
+                <div class="wrap_data">
+                    <span class="data__user_email">${userEmail}</span>
+                    <button class="data__user_button" id="user-button-edit">Edit profile</button>
+                    <button class="data__user_button">Advertising Tools</button>
+                    <button class="data__user_create" id="user-button-create">Create post</button>
+                </div>
+            </div>
+
+            <div class="wrap_create__post" id="wrap-create-post">
+                <h2>Create post</h2>
+                <input class="table__button button_avatar create_input" id="inpun-file-createpost" name="${userEmail}" type="file">
+                <input class="create__post_text" id="inpun-text-createpost" type="text" placeholder="Edd some text..">
+                <button class="table__button create__post_button" id="inpun-button-createpost">post</button>
+            </div>
 
         </div>
     </div>
@@ -253,22 +402,29 @@ const callbackProfile = async () => {
     divUserProfile.style.backgroundImage = `url(${user.imgURL})`
 
 
-    
-    
     const userButtonEdit = document.getElementById('user-button-edit')
     const userButtonCreate = document.getElementById('user-button-create')
-
-    
+    const headerButtonProfile = document.getElementById('header-button-profile')
+    const headerButtonInteresting = document.getElementById('header-button-interesting')
+    headerButtonProfile.addEventListener('click', () => location.hash = '#profile')
+    userButtonCreate.addEventListener('click', () => location.hash = '#createpost')
     userButtonEdit.addEventListener('click', () => location.hash = '#edittable')
+    headerButtonInteresting.addEventListener('click', () => location.hash = '#interesting')
 
+    const inpunFileCreatepost = document.getElementById('inpun-file-createpost')
+    const inpunTextCreatepost = document.getElementById('inpun-text-createpost')
+    const inpunButtonCreatepost = document.getElementById('inpun-button-createpost')
+    const url = `http://localhost:3000/posts/${idUser}`
+    inpunButtonCreatepost.addEventListener('click', async () => {
+        await sendPostImage(inpunFileCreatepost, inpunTextCreatepost, url)
+        location.hash = '#profile'
+    })
 }
-
 
 
 //-------------------------------------------Edit-Table-------------------------------------
 const callbackEditTable = async () => {
 
-    const check = sessionStorage.getItem('isAuthorized')
     const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
     
 
@@ -281,18 +437,18 @@ const callbackEditTable = async () => {
             <header class="header">
                 <h1 class="header__title">Instagram</h1>
                 <nav class="header__nav">
-                    <button class="header__button"><span class="nav__span nav__span_main">Main</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_search">Search</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_interesting">Interesting</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_messages">Messages</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_reels">Reels</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_notification">Notification</span></button>
-                    <button class="header__button"><span class="nav__span nav__span_create">Create</span></button>
+                    <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
+                    <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
+                    <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
+                    <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
+                    <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
+                    <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
+                    <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
                     <button class="header__button" id="header-button-profile"><div class="header_user_avatar" id="div-user-profile"></div><span class="nav__span nav__span_profile" >Profile</span></button>
-                    <button class="header__button header__button_last"><span class="nav__span nav__span_more">More</span></button>
+                    <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
                 </nav>
             </header>
-        </div> 
+        </div>
 
         <div class="user__profile">
 
@@ -400,7 +556,6 @@ const callbackEditTable = async () => {
 
 
 
-    const userAvatar = document.getElementById('user-avatar')
     const upFile = document.getElementById('up-file')
 
     const tableButtonEdit = document.getElementById('table-button-edit')
@@ -433,7 +588,7 @@ const callbackEditTable = async () => {
     page.elements.formEditTable = new Form('form-container-edit', formOptionEditTadle)
     
     upFile.addEventListener('change', async () => {
-        page.sendImage(upFile)
+        page.sendImage(upFile, 'http://localhost:3000/uploads')
         const img = upFile.files[0]
         
         const reader = new FileReader()
@@ -449,16 +604,9 @@ const callbackEditTable = async () => {
     })
     
 
-//-------код ниже для работы модального окна 
-    // page.elements.table.modal.btn.addEventListener('click', () => {
-    //     page.elements.table.closeModal()
-    //     location.hash = '#profile'
-    // })
-
     tableButtonEdit.addEventListener('click', async (event) => {
             await page.onclickEditTable()
-            // page.elements.table.closeModal()
-            // location.hash = '#profile'
+            location.hash = '#profile'
     })
 
     tableButtonClose.addEventListener('click', () => location.hash = '#profile')
@@ -662,6 +810,11 @@ const routes = {
         script: callbackTable
     },
 
+    interesting: {
+        title: 'Table',
+        script: callbackInteresting
+    },
+
     edittable: {
         title: 'Edit Table',
         script: callbackEditTable
@@ -670,6 +823,11 @@ const routes = {
     viewtable: {
         title: 'View Table',
         script: callbackViewTable
+    },
+
+    createpost: {
+        title: 'Create post',
+        script: callbackCreatePost
     }
 
 }; 

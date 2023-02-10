@@ -35,15 +35,16 @@ export class Page {
         return await fetch(url).then(response => { return response.json() })
     }
 
-    async sendImage(input) {
+    async sendImage(input, url) {
         const formData = new FormData()
         formData.append('avatar', input.files[0])
         formData.append('filename', input.name)
-        return await fetch('http://localhost:3000/uploads', {
+        return await fetch(url, {
             method: 'POST',
             body: formData
         })
     }
+    
     async registration(event) {
         event.preventDefault()
 

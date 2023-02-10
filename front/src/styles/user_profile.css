@@ -32,22 +32,26 @@
 
 .data__user_button {
   box-sizing: border-box;
-  width: 120px;
+  width: 110px;
   height: 30px;
   border: none;
   cursor: pointer;
   border-radius: 10px;
+  background: rgba(130, 130, 130, 0.3019607843);
 }
 
 .data__user_button:hover {
-  background-color: rgba(130, 130, 130, 0.3019607843);
+  background-color: rgba(130, 130, 130, 0.4274509804);
 }
 
 .data__user_create {
-  width: 90px;
-  height: 32px;
+  box-sizing: border-box;
+  width: 110px;
+  height: 30px;
+  border: none;
   cursor: pointer;
-  background-color: rgba(130, 130, 130, 0.3019607843);
+  border-radius: 10px;
+  background: rgba(130, 130, 130, 0.3019607843);
 }
 
 .data__user_create:hover {
@@ -55,7 +59,23 @@
 }
 
 .user__content {
-  background: url("./img/user_content.png");
-  background-size: 100% 100%;
+  margin-top: 50px;
+  display: flex;
+  width: 850px;
+  flex-wrap: wrap;
+  -moz-column-gap: 50px;
+       column-gap: 50px;
+  row-gap: 40px;
   height: 450px;
+}
+
+.user__post {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user__img_post {
+  width: 250px;
+  height: 250px;
 }

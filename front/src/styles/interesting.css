@@ -1,0 +1,9 @@
+.user__posts {
+  margin-top: 50px;
+  display: flex;
+  width: 850px;
+  flex-wrap: wrap;
+  -moz-column-gap: 50px;
+       column-gap: 50px;
+  row-gap: 40px;
+}

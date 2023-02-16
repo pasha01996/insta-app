@@ -38,17 +38,31 @@ const creatingHTML = async (wrapper, htmlElem) => {
     await new Promise((res, rej) => res(document.getElementById(wrapper).replaceWith(htmlElem)))
 }
 
-const creatUserPosts = async (wrapper, url, description) => {
+const creatUserPosts = async (wrapper, obj) => {
+    const postData = obj
     const htmlElem = document.createElement('div')
     htmlElem.classList.add('user__post')
     htmlElem.insertAdjacentHTML('afterbegin', `
-        <img class="user__img_post" src="${url}" alt="${description}">
-        <div class="user_description_post">${description}</div>
+        <img class="user__img_post" src="${postData.url}" alt="${postData.description}">
+        <div class="user_description_post">${postData.description}</div> 
+        <div class="div_post_description">
+            <input class="post__description_input" data-post-id="${postData._id}" placeholder="new description">
+            <button class="post__description_button" data-post-id="${postData._id}">/</button>
+        </div>
     `)
     await wrapper.append(htmlElem)
 }
  
-
+const sendPUTRequest = async (url, description) => {
+     await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({description}),
+        mode: 'cors',
+        cache: 'default'
+        
+    })
+}
 //--------------------------------------Signin / #------------------------------------
 const callbackFirstPage = async () => {
 
@@ -207,19 +221,17 @@ const callbackMainPage = async () => {
     </div>
     `)
     creatingHTML('wrapper_body', htmlElem)
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id 
-    const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`) 
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id 
+    const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
     const divUserProfile = document.getElementById('div-user-profile')
     if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
     divUserProfile.style.backgroundImage = `url(${user.imgURL})`
     
-
     
     const headerButtonProfile = document.getElementById('header-button-profile')
     const headerButtonInteresting = document.getElementById('header-button-interesting')
     headerButtonInteresting.addEventListener('click', () => location.hash = '#interesting')
     headerButtonProfile.addEventListener('click', () => location.href = '#profile')
-
 
 }
 
@@ -254,7 +266,8 @@ const callbackInteresting = async () => {
     </div>
     `)
     creatingHTML('wrapper_body', htmlElem)
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id 
+
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id 
     const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`) 
     const divUserProfile = document.getElementById('div-user-profile')
     if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
@@ -262,7 +275,24 @@ const callbackInteresting = async () => {
 
     const allUsersPosts = document.getElementById('all-users-posts')
     const allPosts = await sendGETRequest(`http://localhost:3000/posts`)
-    await allPosts.forEach(post => creatUserPosts(allUsersPosts, post.img, post.description))
+    await allPosts.forEach((post) => creatUserPosts(allUsersPosts, post))
+    
+    const posts = Array.prototype.slice.call(document.querySelectorAll('.user__post'))
+    posts.forEach(post => post.addEventListener('click', async (event) => { 
+        const button = document.querySelector(`button[data-post-id="${event.target.dataset.postId}"]`)
+        
+        if (event.target == button) {
+            const input = document.querySelector(`input[data-post-id="${event.target.dataset.postId}"]`)
+            await sendPUTRequest(`http://localhost:3000/posts/${event.target.dataset.postId}`, input.value)
+            // const allPosts = await sendGETRequest(`http://localhost:3000/posts`)
+            // await allPosts.forEach((post) => creatUserPosts(allUsersPosts, post))
+        }
+        
+        
+    }))
+    
+    
+
     
     const headerButtonProfile = document.getElementById('header-button-profile')
     const headerButtonInteresting = document.getElementById('header-button-interesting')
@@ -317,19 +347,24 @@ const callbackProfile = async () => {
 
     `)
     creatingHTML('wrapper_body', htmlElem)
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id
+
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
     const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
+
     const divUserAvatar = document.getElementById('div-user-avatar')
     const divUserProfile = document.getElementById('div-user-profile')
-    if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
+
+    if (user.imgURL) {
+        user.imgURL
+    } else {
+        user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'
+    }
     divUserAvatar.style.backgroundImage = `url(${user.imgURL})` 
     divUserProfile.style.backgroundImage = `url(${user.imgURL})`
 
     const userContent = document.getElementById('user-content')
     const userPosts = await sendGETRequest(`http://localhost:3000/posts/${idUser}`)
-    userPosts.forEach( post => creatUserPosts(userContent, post.img, post.description))
-    
-    
+    if (userPosts) { userPosts.forEach( post => creatUserPosts(userContent, post.url, post.description)) }
     
     
     const userButtonEdit = document.getElementById('user-button-edit')
@@ -393,7 +428,8 @@ const callbackCreatePost = async () => {
 
     `)
     creatingHTML('wrapper_body', htmlElem)
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id
+
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
     const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
     const divUserAvatar = document.getElementById('div-user-avatar')
     const divUserProfile = document.getElementById('div-user-profile')
@@ -544,7 +580,7 @@ const callbackEditTable = async () => {
 
     `)
     creatingHTML('wrapper_body', htmlElem)
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized')).id
+    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
     const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
     const divUserAvatar = document.getElementById('div-user-avatar')
     const divUserProfile = document.getElementById('div-user-profile')

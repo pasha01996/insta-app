@@ -35,6 +35,7 @@ export class Page {
         return await fetch(url).then(response => { return response.json() })
     }
 
+
     async sendImage(input, url) {
         const formData = new FormData()
         formData.append('avatar', input.files[0])
@@ -71,12 +72,10 @@ export class Page {
         }   
 
         if (this.elements.formSignin.isValidForm()) {
-            await this.sendGETRequest('http://localhost:3000/users')
-                .then(data => this.users = data)
-            const findUser = this.users.find(elem => elem.email === userData.email && elem.password === userData.password)
-            if (findUser !== undefined) { 
+            const response = await this.sendPOSTRequest('http://localhost:3000/login', userData)
+            if (response) { 
                 isAuthorized = true 
-                sessionStorage.setItem('whoAuthorized', JSON.stringify(findUser))
+                sessionStorage.setItem('whoAuthorized', JSON.stringify(response))
                 sessionStorage.setItem('isAuthorized', isAuthorized)
             } else { 
                 isAuthorized = false 

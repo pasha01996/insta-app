@@ -9,7 +9,6 @@ const app = express();
 const multer = require('multer');
 const moment = require('moment');
 const { MongoClient } = require('mongodb');
-const { json } = require('express');
 const uri = "mongodb+srv://pasha096:pasha096@cluster0.rjjcxdz.mongodb.net/insta?retryWrites=true&w=majority"
 const client = new MongoClient(uri)
 const ObjectId = require('mongodb').ObjectId;
@@ -78,9 +77,7 @@ app.post('/login', async (req, res) => {
     if (userToFind) { res.send(userToFind) } else { res.send(false) }
 })
 
-
 app.put('/users/:id', async (req, res) => {
-
     await readFileAsync(path.resolve(__dirname, 'users.txt'))
         .then(data => { 
             const id = req.params.id
@@ -93,8 +90,6 @@ app.put('/users/:id', async (req, res) => {
             res.send(mergedUser)
             writeFileAsync(path.resolve(__dirname, 'users.txt'), JSON.stringify(allUsers))
     })  
-
-
 })
 
 app.post('/uploads', upload.single('avatar'), async (req, res) => { 
@@ -112,7 +107,6 @@ app.post('/uploads', upload.single('avatar'), async (req, res) => {
         writeFileAsync(path.resolve(__dirname, 'users.txt'), JSON.stringify(allUsers))
     })
 })  
-
 //remake to mongo
 app.post('/posts/:id', upload.single('post'), async (req, res) => { 
     const date = moment().format('DDMMYYYY-HHmmss_SSS')
@@ -123,20 +117,27 @@ app.post('/posts/:id', upload.single('post'), async (req, res) => {
     const id = req.params.id
     const URL = `http://localhost:3000/${imgName}`
     const allPosts = client.db().collection('posts')
-    const post = {userID: id, url: URL, description: req.body.description}
+    const post = {userID: id, user: req.body.filename,  url: URL, description: req.body.description, date: date}
     await allPosts.insertOne(post)
     
     res.send(URL)
 }) 
 //remake to mongo
-app.get('/posts/:id', async (req, res) => {
-    const id = req.params.id
-    console.log(id)
+app.get('/posts/id:id', async (req, res) => {
+    const id = new ObjectId(req.params.id)
     const allPosts = await client.db().collection('posts')
-    const postsToSend = []
+    const post = await allPosts.findOne({_id: id})
+    if (post) {
+        res.send(post)
+    } else {
+        res.send(false)
+    }
+})
+//remake to mongo
+app.get('/posts/user:id', async (req, res) => {
+    const id = req.params.id
+    const allPosts = await client.db().collection('posts')
     const userPosts = await allPosts.find({userID: id}).toArray()
-   
-    console.log(userPosts)
     if (userPosts) {
         res.send(userPosts)
     } else {
@@ -145,11 +146,29 @@ app.get('/posts/:id', async (req, res) => {
 })
 //remake to mongo
 app.get('/posts', async(req, res) => {
-    const allPosts = await client.db().collection('posts').find().toArray()
+    const allPosts = await client.db().collection('posts').find().sort({date:-1}).toArray()
     res.send(allPosts)
 })
+//remake to mongo
+app.get('/posts/part:part', async(req, res) => {
+    const row = 9
+    let part = req.params.part
+    const allPosts = await client.db().collection('posts').find().sort({date:-1}).toArray()
+    const countOfPosts = allPosts.length
+    const allPartOfPosts = Math.ceil(countOfPosts / row)
 
-app.put('/posts/:id', async(req, res) => {
+    if (part <= allPartOfPosts) {
+        part--
+        const start = row * part
+        const end = start + row
+        const sliceOfPosts = allPosts.slice(start, end)
+        res.send(sliceOfPosts)
+    } else {
+        res.send(JSON.stringify(''))
+    }
+})
+//remake to mongo
+app.put('/posts/id:id', async(req, res) => {
     const update = req.body
     const postId = new ObjectId(req.params.id)
 
@@ -157,9 +176,78 @@ app.put('/posts/:id', async(req, res) => {
     res.send('')
 })
 
+app.put('/posts/like:id', async(req, res) => {
+    const update = req.body
+    const postId = new ObjectId(req.params.id)
+    console.log(update)
+    const collection = await client.db().collection('posts')
+    const findPost = await collection.findOne({_id: postId})
+
+    if (update.like) {
+        if (findPost.like) {
+            if (findPost.unlike) {
+                const findUnlike = findPost.unlike.find(elem => elem == update.like)
+                
+                if (findUnlike) {
+                    const findUnlike = findPost.unlike.findIndex(elem => elem == update.like)
+                    findPost.unlike.splice(findUnlike, 1)
+                    
+                    collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+                }
+            }
+            const findLike = findPost.like.find(elem => elem == update.like)
+            if (!findLike) {
+                findPost.like.push(update.like)
+                collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+            }
+        } else {
+            collection.findOneAndUpdate({_id: postId}, {$set: {like: [update.like]}})
+            if (findPost.unlike) {
+                const findUnlike = findPost.unlike.find(elem => elem == update.like)
+                console.log(findUnlike)
+                if (findUnlike) {
+                    const findUnlike = findPost.unlike.findIndex(elem => elem == update.like)
+                    findPost.unlike.splice(findUnlike, 1)
+                    collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+                }
+            }
+        }
+    }
+
+
+    if (update.unlike) {
+        if (findPost.unlike) {
+            if (findPost.like) {
+                const findLike = findPost.like.find(elem => elem == update.unlike)
+                if (findLike) {
+                    const findLike = findPost.like.findIndex(elem => elem == update.unlike)
+                    findPost.like.splice(findLike, 1)
+                    collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+                }
+            }
+            const findUnlike = findPost.unlike.find(elem => elem == update.unlike)
+            if (!findUnlike) {
+                findPost.unlike.push(update.unlike)
+                collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+            }
+        } else {
+            collection.findOneAndUpdate({_id: postId}, {$set: {unlike: [update.unlike]}})
+            if (findPost.like) {
+                const findLike = findPost.like.find(elem => elem == update.unlike)
+                console.log(findLike)
+                if (findLike) {
+                    const findLike = findPost.like.findIndex(elem => elem == update.unlike)
+                    findPost.like.splice(findLike, 1)
+                    collection.findOneAndUpdate({_id: postId}, {$set: findPost})
+                }
+            }
+        }
+    }
+
+    res.send('')
+})
+
 
 app.listen(PORT, () => console.log('Server start'))
-
-
 
 

@@ -28,6 +28,8 @@
 
 .user_description_post {
   border: none;
+  font-size: 18px;
+  font-family: -apple-system, "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
 }
 
 .post__description_button {
@@ -49,4 +51,22 @@
 .post__description_input {
   margin-left: 20px;
   border: #dddddd 0.2px solid;
+}
+
+.span_post_description {
+  font-size: 12px;
+  font-weight: 600;
+  padding-bottom: 5px;
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.green {
+  color: green;
+}
+
+.red {
+  color: red;
 }

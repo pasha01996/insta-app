@@ -9,6 +9,7 @@ const app = express();
 const multer = require('multer');
 const moment = require('moment');
 const { MongoClient } = require('mongodb');
+const { send } = require('process');
 const uri = "mongodb+srv://pasha096:pasha096@cluster0.rjjcxdz.mongodb.net/insta?retryWrites=true&w=majority"
 const client = new MongoClient(uri)
 const ObjectId = require('mongodb').ObjectId;
@@ -47,67 +48,76 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use('/uploads', express.static('uploads'))
 
-//--------------------------------server---------------------------------
 
-//remake to mongo
-app.post('/users', async (req, res) => {
-    const user = req.body
+
+//--------------users---------------
+
+app.post('/login', async (req, res) => {
+    const userToLogin = req.body
     const users = await client.db().collection('users')
-    users.insertOne(user)
+
+    const userToFind = await users.findOne({email: userToLogin.email, password: userToLogin.password})
+    if (userToFind) { 
+        res.send({check: true, user: userToFind}) 
+    } else {
+        res.send({check: false}) 
+    }
 })
-//remake to mongo
+
+app.post('/users', async (req, res) => {
+    const userToRegistr = req.body
+    const collection = await client.db().collection('users')
+    
+    const userToFind = await collection.findOne({email: userToRegistr.email})
+    
+    if (userToFind) { 
+        res.send(false) 
+    } else { 
+        res.send(true) 
+        userToRegistr.url = 'http://localhost:3000/uploads/unknown_user.jpg'
+        collection.insertOne(userToRegistr)
+    }
+})
+
 app.get('/users/:id', async (req, res) => {
     const id = new ObjectId(req.params.id)
     const users = await client.db().collection('users')
     const userToFind = await users.findOne({_id: id})
     res.send(userToFind)
 })
-//remake to mongo
+
 app.get('/users', async (req, res) => {
     console.log(req.body)
     const users = await client.db().collection('users').find().toArray()
     res.send(users)
 })
-//remake to mongo
-app.post('/login', async (req, res) => {
-    const userToLogin = req.body
-    const users = await client.db().collection('users')
-    const userToFind = await users.findOne({email: userToLogin.email, password: userToLogin.password})
-    
-    if (userToFind) { res.send(userToFind) } else { res.send(false) }
-})
 
+//----х----
 app.put('/users/:id', async (req, res) => {
-    await readFileAsync(path.resolve(__dirname, 'users.txt'))
-        .then(data => { 
-            const id = req.params.id
-            const allUsers = JSON.parse(data)
-            const findUser = allUsers.find(user => user.id === id)
-            const findIndexUser = allUsers.findIndex(user => user.id === id)
-            const user = req.body
-            const mergedUser = {...findUser, ...user}
-            allUsers.splice(findIndexUser, 1, mergedUser)
-            res.send(mergedUser)
-            writeFileAsync(path.resolve(__dirname, 'users.txt'), JSON.stringify(allUsers))
-    })  
+    const userId = new ObjectId(req.params.id)
+    const update = req.body
+    const users = await client.db().collection('users')
+    const userToFind = await users.findOne({_id: userId})
+    console.log(update)
+    res.send('')
 })
 
-app.post('/uploads', upload.single('avatar'), async (req, res) => { 
+app.put('users/:id/avatar',upload.single('avatar'), async (req, res) => {
     const date = moment().format('DDMMYYYY-HHmmss_SSS')
     const imgName = `uploads/${date}-${req.body.filename}.JPG`
     fs.rename(`uploads/${req.file.fieldname}.JPG`, imgName, (err) => { if(err) { throw err} })
-    readFileAsync(path.resolve(__dirname, 'users.txt'))
-    .then(data => {
-        const allUsers = JSON.parse(data)
-        const findUser = allUsers.find(user => user.email === req.body.filename)
-        const findIndexUser = allUsers.findIndex(user => user.email === req.body.filename)
-        
-        findUser.imgURL = `http://localhost:3000/${imgName}`
-        allUsers.splice(findIndexUser, 1, findUser)
-        writeFileAsync(path.resolve(__dirname, 'users.txt'), JSON.stringify(allUsers))
-    })
-})  
-//remake to mongo
+
+    const userId = new ObjectId(req.params.id)
+    const collection = await client.db().collection('users')
+    await collection.findOneAndUpdate({_id: userId}, {url: imgName})
+
+    res.send('')
+})
+
+
+
+//--------------posts---------------
+
 app.post('/posts/:id', upload.single('post'), async (req, res) => { 
     const date = moment().format('DDMMYYYY-HHmmss_SSS')
     const imgName = `uploads/${date}-${req.body.filename}.JPG`
@@ -122,7 +132,7 @@ app.post('/posts/:id', upload.single('post'), async (req, res) => {
     
     res.send(URL)
 }) 
-//remake to mongo
+
 app.get('/posts/id:id', async (req, res) => {
     const id = new ObjectId(req.params.id)
     const allPosts = await client.db().collection('posts')
@@ -133,7 +143,7 @@ app.get('/posts/id:id', async (req, res) => {
         res.send(false)
     }
 })
-//remake to mongo
+
 app.get('/posts/user:id', async (req, res) => {
     const id = req.params.id
     const allPosts = await client.db().collection('posts')
@@ -144,12 +154,12 @@ app.get('/posts/user:id', async (req, res) => {
         res.send(false)
     }
 })
-//remake to mongo
+
 app.get('/posts', async(req, res) => {
     const allPosts = await client.db().collection('posts').find().sort({date:-1}).toArray()
     res.send(allPosts)
 })
-//remake to mongo
+
 app.get('/posts/part:part', async(req, res) => {
     const row = 9
     let part = req.params.part
@@ -167,7 +177,7 @@ app.get('/posts/part:part', async(req, res) => {
         res.send(JSON.stringify(''))
     }
 })
-//remake to mongo
+
 app.put('/posts/id:id', async(req, res) => {
     const update = req.body
     const postId = new ObjectId(req.params.id)
@@ -176,10 +186,9 @@ app.put('/posts/id:id', async(req, res) => {
     res.send('')
 })
 
-app.put('/posts/like:id', async(req, res) => {
+app.put('/posts/like:id', async(req, res) => { 
     const update = req.body
     const postId = new ObjectId(req.params.id)
-    console.log(update)
     const collection = await client.db().collection('posts')
     const findPost = await collection.findOne({_id: postId})
 
@@ -191,7 +200,6 @@ app.put('/posts/like:id', async(req, res) => {
                 if (findUnlike) {
                     const findUnlike = findPost.unlike.findIndex(elem => elem == update.like)
                     findPost.unlike.splice(findUnlike, 1)
-                    
                     collection.findOneAndUpdate({_id: postId}, {$set: findPost})
                 }
             }
@@ -204,7 +212,6 @@ app.put('/posts/like:id', async(req, res) => {
             collection.findOneAndUpdate({_id: postId}, {$set: {like: [update.like]}})
             if (findPost.unlike) {
                 const findUnlike = findPost.unlike.find(elem => elem == update.like)
-                console.log(findUnlike)
                 if (findUnlike) {
                     const findUnlike = findPost.unlike.findIndex(elem => elem == update.like)
                     findPost.unlike.splice(findUnlike, 1)
@@ -234,7 +241,6 @@ app.put('/posts/like:id', async(req, res) => {
             collection.findOneAndUpdate({_id: postId}, {$set: {unlike: [update.unlike]}})
             if (findPost.like) {
                 const findLike = findPost.like.find(elem => elem == update.unlike)
-                console.log(findLike)
                 if (findLike) {
                     const findLike = findPost.like.findIndex(elem => elem == update.unlike)
                     findPost.like.splice(findLike, 1)
@@ -246,6 +252,58 @@ app.put('/posts/like:id', async(req, res) => {
 
     res.send('')
 })
+
+
+
+//---------comments----------
+app.post('/posts/:id/comments', async(req, res) => {
+    const update = req.body
+    const postId = req.params.id
+    const collection = await client.db().collection('comments')
+    update['postID'] = postId
+    const newComment = await collection.insertOne(update)
+    const newCommentId = new ObjectId(newComment.insertedId)
+    const sendComment = await collection.findOne({_id: newCommentId})
+
+    res.send(sendComment)
+})
+
+app.get('/posts/:id/comments', async(req, res) => {
+    const postId = req.params.id
+    const collection = await client.db().collection('comments')
+    const findAllPost = await collection.find({postID: postId}).toArray()
+
+    console.log(findAllPost)
+    res.send(findAllPost)
+})
+
+app.delete('/posts/:id/comments', async(req, res) => {
+    const commentId = new ObjectId(req.params.id)
+    const collection = await client.db().collection('comments')
+    collection.findOneAndDelete({_id: commentId})
+    
+    res.send('')
+})
+
+app.post('/posts/:id/commentTocomment', async(req, res) => {
+    const update = req.body
+    const commentId = new ObjectId(req.params.id)
+    const collection = await client.db().collection('comments')
+    const findComment = await collection.findOne({_id: commentId})
+
+
+    if (!findComment.commentsThisComment) {
+        findComment.commentsThisComment = [update]
+        collection.findOneAndUpdate({_id: commentId}, {$set: findComment})
+    } else {
+        findComment.commentsThisComment.push(update)
+        collection.findOneAndUpdate({_id: commentId}, {$set: findComment})
+    }
+
+    res.send({})
+})
+
+
 
 
 app.listen(PORT, () => console.log('Server start'))

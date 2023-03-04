@@ -1,13 +1,9 @@
-import {isRegistered} from "./scripts/Page.js"
-import {isAuthorized} from "./scripts/Page.js"
 import {Form} from "./scripts/Form.js"
 import {Control} from "./scripts/Control.js"
 import {checks} from "./scripts/module.js"
-import {Table} from "./scripts/Table.js"
-import {Page} from "./scripts/Page.js"
-import {radio} from "./scripts/radio.js"
 import {create} from "./scripts/html_elems.js"
-
+import {sendFetch} from "./adapters/fetch.js"
+import {urls} from "./adapters/fetch.js"
 
 import "./styles/header.css" 
 import "./styles/style.css" 
@@ -22,128 +18,66 @@ import "./styles/paginations.css"
 
 const port = 'http://localhost:3000'
 
+let isAuthorized = false
+let isRegistered = false
 //-------------------------------------functions-----------------------------------------
 
-const sendGETRequest = async (url) => {
-    return await fetch(url).then(response => { return response.json() })
-}
-
-const sendPostImage = async (input, inputText, url) => {
-    const formData = new FormData()
-    formData.append('post', input.files[0])
-    formData.append('filename', input.name)
-    formData.append('description', inputText.value)
-    await fetch(url, {
-        method: 'POST',
-        body: formData
-    })
-}
-
-const sendPUTRequest = async (url, description) => {
-    await fetch(url, {
-       method: 'PUT',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({description}),
-       mode: 'cors',
-       cache: 'default'
-       
-   })
-}
-
-const displayPage = async (wrapper, htmlElem) => {
-    await new Promise((res, rej) => res(document.getElementById(wrapper).replaceWith(htmlElem)))
+const displayPage = async (htmlElem) => {
+    await new Promise((res, rej) => res(document.getElementById('wrapper_body').replaceWith(htmlElem)))
 }
 
 const displayUserAvatar = async (...args) => {
     const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
-    const user = await sendGETRequest(`http://localhost:3000/users/${idUser}`)
-    const userAvatarEl = document.getElementById('div-user-profile')
-    if (user.imgURL) {user.imgURL} else {user.imgURL = 'http://localhost:3000/uploads/unknown_user.jpg'}
-    args.forEach(elem => elem.style.backgroundImage = `url(${user.imgURL})`)
-}
+    const user = await sendFetch.GETRequest(`http://localhost:3000/users/${idUser}`)
 
-const creatUserPosts = async (wrapper, obj, callbackCurrentPage) => {
-    const postData = obj
-    const htmlElem = document.createElement('div')
-    const getTime = () => {
-        let timeOfPost = obj.date.slice(9, 13)
-         timeOfPost = timeOfPost.split('')
-         timeOfPost.splice(2, 0, ':')
-         return timeOfPost.join('')
-    }
-    
-    htmlElem.classList.add('user__post')
-    htmlElem.insertAdjacentHTML('afterbegin', `
-        <div class="div_post_description">
-            <span class="span_post_description">${postData.user}</span>
-            <span class="span_post_description">${getTime()}</span>
-        </div>
-        <img class="user__img_post" src="${postData.url}" alt="${postData.description}">
-        <div class="user_description_post">${postData.description}</div> 
-        <div class="div_post_description">
-            <input class="post__description_input" data-post-id="${postData._id}" placeholder="new description">
-            <button class="post__description_button" data-post-id="${postData._id}">/</button>
-        </div>
-
-    `)
-
-
-    htmlElem.addEventListener('click', async (event) => {
-        const button = document.querySelector(`button[data-post-id="${event.target.dataset.postId}"]`)
-        
-        if (event.target == button) {
-            const input = document.querySelector(`input[data-post-id="${event.target.dataset.postId}"]`)
-            await sendPUTRequest(`http://localhost:3000/posts/id${event.target.dataset.postId}`, input.value)
-            callbackCurrentPage()
-        }
+    args.forEach( elem => {
+        const userImg = document.getElementById(elem)
+        userImg.style.backgroundImage = `url(${user.url})`
     })
-    
-    await wrapper.append(htmlElem)
 }
 
-const handlerForLike = async (postID, userID, isLike) => {
+const createDataForRequest = (userEmail, userUrl, userId, comment) => {
     const body = {}
-    body[isLike] = userID
-    
-    await fetch(`http://localhost:3000/posts/like${postID}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        mode: 'cors',
-        cache: 'default'    
-    })
+    body['user'] = userEmail
+    body['userUrl'] = userUrl
+    body['userID'] = userId
+    body['comment'] = comment
+    return body
 }
 
-const creatFeedPost = async (wrapper, obj, functionForLike) => {
-    const postData = obj
-    const htmlElem = document.createElement('div')
-    
+const createPost = async (wrapper, data) => {
+    const postData = data
 
     let countLike = 0
     let countUnlike = 0
     if (postData.like) {countLike = postData.like.length} 
     if (postData.unlike) {countUnlike = postData.unlike.length}
     
-
     const getTime = () => {
-        let timeOfPost = obj.date.slice(9, 13)
+        let timeOfPost = data.date.slice(9, 13)
          timeOfPost = timeOfPost.split('')
          timeOfPost.splice(2, 0, ':')
          return timeOfPost.join('')
     }
 
+    const htmlElem = document.createElement('div')
     htmlElem.classList.add('user__post')
     htmlElem.insertAdjacentHTML('afterbegin', `
-        <div class="div_post_description">
+        <div class="modal_post_description">
             <span class="span_post_description">${postData.user}</span>
             <span class="span_post_description">${getTime()}</span>
         </div>
-        <img class="user__img_post" src="${postData.url}" alt="${postData.description}">
+    `)
+    
+    const divImg = document.createElement('div')
+    divImg.insertAdjacentHTML('afterbegin', `
+        <img class="modal__img_post" src="${postData.url}" alt="${postData.description}" data-postId="${postData._id}">
         <div class="user_description_post">${postData.description}</div> 
     `)
 
-    const div = document.createElement('div')
-    div.classList.add('div_post_description')
+    const divLike = document.createElement('div')
+    divLike.classList.add('modal_post_description')
+    
     const likeBtn = document.createElement('button')
     likeBtn.classList.add('btn', 'green')
     likeBtn.insertAdjacentHTML('afterbegin', `<i class="fa fa-thumbs-up fa-lg" aria-hidden="true">`)
@@ -161,155 +95,268 @@ const creatFeedPost = async (wrapper, obj, functionForLike) => {
 
     likeBtn.addEventListener('click', async () => {
         const user = JSON.parse(sessionStorage.getItem('whoAuthorized')) 
-        console.log(user)
-        await functionForLike(postData._id, user._id, 'like')
-        const req = await sendGETRequest(`${port}/posts/id${postData._id}`)
+        const url = `http://localhost:3000/posts/like${postData._id}`
+        await sendFetch.PUTRequest(url, 'like', user._id)
+
+        const req = await sendFetch.GETRequest(`${port}/posts/id${postData._id}`)
         if(req.like) span1.innerText = req.like.length
         if (req.unlike) span2.innerText = req.unlike.length
     })
 
     unlikeBtn.addEventListener('click', async () => {
         const user = JSON.parse(sessionStorage.getItem('whoAuthorized')) 
-        await functionForLike(postData._id, user._id, 'unlike')
-        const req = await sendGETRequest(`${port}/posts/id${postData._id}`)
+        const url = `http://localhost:3000/posts/like${postData._id}`
+        await sendFetch.PUTRequest(url, 'unlike', user._id)
+
+        const req = await sendFetch.GETRequest(`${port}/posts/id${postData._id}`)
         if(req.like) span1.innerText = req.like.length
         if (req.unlike) span2.innerText = req.unlike.length
     })
 
-    div.append(likeBtn)
-    div.append(unlikeBtn)
-    htmlElem.append(div)
+    divLike.append(likeBtn)
+    divLike.append(unlikeBtn)
+    htmlElem.append(divImg)
+    htmlElem.append(divLike)
+    wrapper.append(htmlElem) 
+}
 
-    await wrapper.append(htmlElem)
+const createComments = async (wrapper, data, idPost) => {
+    const commentData = data
+    console.log(commentData)
 
+    const sectionComments = document.createElement('div')
+    sectionComments.classList.add('modal__main')
+
+    const headerComments = document.createElement('div')
+    headerComments.classList.add('modal__post_all_coments')
+
+
+    const footerComments = create.footerComments()
+    const btnFooterComments = footerComments.querySelector('.modal__post_button')
+    const divUserToComment = footerComments.querySelector('.modal__container_commentToComment')
+    const textarea = footerComments.querySelector('.modal__post_textarea')
+
+    if (commentData) {
+        commentData.forEach((elem) => {
+            //create main comment
+            const mainComment = create.comment(elem.userUrl, elem.user, elem._id, elem.comment, elem.userID)
+            const divCommentsForComment = mainComment.querySelector('.modal__wrapper_comments_for_comment')
+            const buttonAnswer = mainComment.querySelector('.modal__div_answer')
+            const buttonDelete = mainComment.querySelector('.modal__span_delete')
+
+            //create comment for comment
+            if(elem.commentsThisComment) {
+                elem.commentsThisComment.forEach((elem) => {
+                const secondComment = create.comment(elem.userUrl, elem.user, elem._id, elem.comment, elem.userID)  
+                divCommentsForComment.append(secondComment)
+                })
+                
+            }
+
+            //add events
+            buttonDelete.addEventListener('click', async (event) => {
+                const loginUserID = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+                const userWantDeleteID = event.target.dataset.userId
+                console.log(loginUserID)
+                console.log(userWantDeleteID)
+                if (loginUserID === userWantDeleteID) {
+                    const commentID = event.target.dataset.commentId
+                    const url = `http://localhost:3000/posts/${commentID}/comments`
+                    sendFetch.DELETERequest(url)
+                    mainComment.remove()
+                    divCommentsForComment.remove()
+                }
+            })  
+
+            buttonAnswer.addEventListener('click', () => {
+                divUserToComment.innerText = elem.user
+                btnFooterComments.dataset.commentTo = elem._id
+            })
+
+            //display comments
+            headerComments.append(mainComment)
+            headerComments.append(divCommentsForComment)
+        })
+    }
+
+    btnFooterComments.addEventListener('click', async (event) => {
+        if (event.target.dataset.commentTo) {
+
+            const commentID = event.target.dataset.commentTo
+            const user = JSON.parse(sessionStorage.whoAuthorized)
+            const comment = textarea.value
+            const url = `${port}/posts/${commentID}/commentTocomment`
+
+            const data = createDataForRequest(user.email, user.url, user._id, comment)
+            const res = await sendFetch.POSTRequest(url, data)
+            
+            // create comment HTML
+            const allComments = Array.prototype.slice.call(document.querySelectorAll('.modal__wrapper_comment'))
+            const findCommentToComment = allComments.find(elem => elem.dataset.idComment === event.target.dataset.commentTo)
+            const commentTocomment = create.comment(user.url, user.email, undefined, comment, user._id)
+
+            findCommentToComment.nextSibling.append(commentTocomment)
+            textarea.value = ''
+
+        } else {
+
+            const postID = idPost
+            const user = JSON.parse(sessionStorage.whoAuthorized)
+            const comment = textarea.value
+            const url = `${port}/posts/${postID}/comments`
+            
+            const data = createDataForRequest(user.email, user.url, user._id, comment)
+            const res = await sendFetch.POSTRequest(url, data)
+
+            // create comment HTML
+            const newComment = create.comment(res.userUrl, res.user, res._id, res.comment, res.userID)
+
+            headerComments.append(newComment)
+            textarea.value = ''
+        }
+    })
+
+    sectionComments.append(headerComments)
+    sectionComments.append(footerComments)
+    wrapper.append(sectionComments)
+}
+
+const displayModalPost = async (postID) => {
+
+    const urlComment = `${port}/posts/${postID}/comments`
+    const urlPost = `${port}/posts/id${postID}`
+    const commentData = await sendFetch.GETRequest(urlComment)
+    const postData = await sendFetch.GETRequest(urlPost)
+
+    const modal = document.createElement('div')
+    modal.classList.add('modal')
+
+    const modalContent = document.createElement('div')
+    modalContent.classList.add('modal__content')
+
+    createPost(modalContent, postData)
+    createComments(modalContent, commentData, postData._id)
+
+    modal.append(modalContent)
+    document.body.prepend(modal)
+
+    modal.addEventListener('click', (event)=> {
+        if (event.target === modal) { 
+            modal.remove()
+        }
+    })
+}
+
+const displayPosts = async (wrapper, obj) => {
+    const postData = obj
+
+    const htmlElem = document.createElement('div')
+    htmlElem.classList.add('user__post')
+
+    const divImg = document.createElement('div')
+    divImg.insertAdjacentHTML('afterbegin', `
+        <img class="user__img_post" src="${postData.url}" alt="${postData.description}" data-postId="${postData._id}">
+    `)
+
+    divImg.addEventListener('click', () => {
+        displayModalPost(postData._id)
+    })
+
+    htmlElem.append(divImg)
+    wrapper.append(htmlElem)
 }
  
-
-
 
 
 //--------------------------------------Signin / #------------------------------------
 const callbackFirstPage = async () => {
 
-    const htmlElem = document.createElement('div')
-    htmlElem.classList.add('wrapper_body')
-    htmlElem.setAttribute('id', 'wrapper_body')
-    htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="wrapper">
-        <div class="wrapper_main">
+    displayPage(create.Page(create.loginPage()))
 
-            <div class="side_img"></div>
+    //-------form------
+    const imputsFormSignin =  [
+        new Control('inputEmailSignin', [checks.includesAt, checks.minLengthEight]),
+        new Control('inputPassSignin', [checks.minLengthEight])
+    ]
+    const formSignin = new Form ('form-container-signin', imputsFormSignin, 'inputSubmitSignin')
+    
+    
+    formSignin.submitButton.addEventListener('click', async (event) => {
+        event.preventDefault()
+        const isValid = formSignin.isValidForm()
+        const formData = formSignin.getFormData()
+    
+        if (isValid) {
+            const response = await sendFetch.POSTRequest(urls.login, formData)
 
-            <div class="form__container form__signin" id="form-container-signin">
-
-                <div class="form_header">
-                    <h2 class="form__title">Instagram</h2>
-                    <form class="form__signin" id="form-signin" action="#">
-                        <input class="form__input input__signin_email" id="inputEmailSignin" type="email" name="email" placeholder="Email" id="email">
-                        <input class="form__input input__signin_password" id="inputPassSignin" type="password" name="password" placeholder="Password">
-                        <input class="form__button input__signin_submit" id="inputSubmitSignin" type="button" value="Log in">
-                    </form>
-                    <span class="form__border">Or</span>
-                    <span class="form__span_facebook">Login with Facebook</span>
-                </div>
-
-                <div class="form__footer">
-                    <span class="form__text">Have no account yet?</span>
-                    <a href="#signup" class="form__link_switch" id="switch-signin">Sign up</a>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="footer_img"></div>
-    </div>
-    `)
-    displayPage('wrapper_body', htmlElem)
-
-
-    //-----for form work
-    const inputSubmitSignin = document.getElementById('inputSubmitSignin')
-
-    const formOptionSignin = {
-        inputs: [new Control('inputEmailSignin', [checks.includesAt, checks.minLengthEight]),
-                new Control('inputPassSignin', [checks.minLengthEight])],
-    }
-
-    const pageOptions = {
-        elements: {formSignin: new Form('form-container-signin', formOptionSignin)},
-        btn: {submitSignin: inputSubmitSignin},             
-    }
-
-    const page = new Page(pageOptions)
-
-    page.btn.submitSignin.addEventListener('click', async (event) => {
-        await page.authorization(event)
-        if(isAuthorized) {
-            location.hash = '#feeds'
+            if (response.check) {
+                sessionStorage.setItem('whoAuthorized', JSON.stringify(response.user))
+                location.hash = '#feeds'
+            } else {
+                formSignin.showError()
+            }
         }
-    })
 
+    })
 }
 
 //--------------------------------------------Signup--------------------------------------------
 const callbackSignupForm = async () => {
-
-    const htmlElem = document.createElement('div')
-    htmlElem.classList.add('wrapper_body')
-    htmlElem.setAttribute('id', 'wrapper_body')
-    htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="wrapper">
-        <div class="form__container form__signup" id="form-container-signin">
-
-            <div class="form_header">
-                <h2 class="form__title">Instagram</h2>
-                <span class="form__title_description">Register to see photos and videos of your friends.</span>
-                <button class="form__button"><span class="form__span_facebook">Login with Facebook</span></button>
-                <span class="form__border">Or</span>
-                <form class="form__signin" id="form-signin" action="#">
-                    <input class="form__input" id="inputEmailSignup" type="email" name="email" placeholder="Email" id="email">
-                    <input class="form__input" id="inputPassSignup" type="password" name="password" placeholder="Password">
-                    <input class="form__input" id="inputPhoneSignup" type="tel" name="phone" placeholder="Phone">
-                    <input class="form__input" id="inputCountrySignup" type="text" name="country" placeholder="Country">
-                    <input class="form__button" id="inputSubmitSignup" type="submit" value="Registration">
-                </form>
-                <span class="form__span_facebook">Login with Facebook</span>
-            </div>
-
-            <div class="form__footer">
-                <span class="form__text">Have an account?</span>
-                <a href="#" class="form__link_switch">Sign in</a>
-            </div>
-
-        </div>
-    </div>
-    `)
-    displayPage('wrapper_body', htmlElem)
     
-    
-    const inputSubmitSignup = document.getElementById('inputSubmitSignup')
-    
-    const formOptionSignup = {
-        inputs:[new Control('inputEmailSignup', [checks.includesAt, checks.minLengthEight]),
-                new Control('inputPassSignup', [checks.minLengthEight]),
-                new Control('inputPhoneSignup', [checks.minLengthEight, checks.firstLetterPlus]),
-                new Control('inputCountrySignup', [checks.minLengthEight])],
-    }
-    
-    const pageOptions = {
-        elements: {formSignup: new Form('form-container-signup', formOptionSignup)},
-        btn: { submitSignup: inputSubmitSignup},             
-        nameOfStorage: 'registration'
-    }
+    displayPage(create.Page(create.registrationPage()))
 
-    const page = new Page(pageOptions)
+    //-------form------
+    const imputsFormSignup = [
+        new Control('inputEmailSignup', [checks.includesAt, checks.minLengthEight]),
+        new Control('inputPassSignup', [checks.minLengthEight]),
+        new Control('inputPhoneSignup', [checks.minLengthEight, checks.firstLetterPlus]),
+        new Control('inputCountrySignup', [checks.minLengthEight])
+    ]
+    const formSignup = new Form('form-container-signup', imputsFormSignup, 'inputSubmitSignup')
+ 
     
-    page.btn.submitSignup.addEventListener('click', async (event) => {
-        page.registration(event)
-        if (isRegistered) {location.hash = '#'}
+    formSignup.submitButton.addEventListener('click', async (event) => {
+        event.preventDefault()
+        const isValid = formSignup.isValidForm()
+        const formData = formSignup.getFormData()
+        
+        if (isValid) {
+            const response = await sendFetch.POSTRequest(urls.users, formData)
+            (response) ? location.hash = '#' : formSignup.showError()
+        
+        }
+
     })
 }   
+
+//-------------------------------------------Feeds-----------------------------------------------
+const callbackFeeds = async () => {
+    
+    displayPage(create.Page(create.Wrapper(create.Header(), create.AllPosts())))
+    displayUserAvatar('div-user-profile')
+    
+    //pagination 
+    let currentPart = 1
+    let sizeOfScroll = 350
+    
+    const paginationPosts = async (currentNum) => {
+        const allPostsEl = document.getElementById('all-posts')
+        const partOfPosts = await sendFetch.GETRequest(`http://localhost:3000/posts/part${currentNum}`)
+
+        if (partOfPosts) { partOfPosts.forEach((post) => displayPosts(allPostsEl, post)) } 
+    }
+    paginationPosts(currentPart)
+
+    window.addEventListener('scroll', () => {
+       if (window.scrollY >= sizeOfScroll) {
+        currentPart++
+        sizeOfScroll = sizeOfScroll + 1000
+        paginationPosts(currentPart)
+       }
+    })
+
+}
+
 
 //-------------------------------------------Main-----------------------------------------------
 const callbackMainPage = async () => {
@@ -331,97 +378,31 @@ const callbackMainPage = async () => {
 
 }
 
-//-------------------------------------------Feeds-----------------------------------------------
-const callbackFeeds = async () => {
-    //display Page
-    const header = create.Header()
-    const posts = create.AllPosts()
-    const wrapper = create.Wrapper(header, posts)
-    const page = create.Page(wrapper)
-    displayPage('wrapper_body', page)
-
-    //display User photo
-    const divUserProfile = document.getElementById('div-user-profile')
-    displayUserAvatar(divUserProfile)
-    
-    //pagination 
-    let currentPart = 1
-    let sizeOfScroll = 350
-    
-    const displayPosts = async (currentNum) => {
-        const allPostsEl = document.getElementById('all-posts')
-        const partOfPosts = await sendGETRequest(`http://localhost:3000/posts/part${currentNum}`)
-
-        if (partOfPosts) { partOfPosts.forEach((post) => creatFeedPost(allPostsEl, post, handlerForLike)) } 
-    }
-    displayPosts(currentPart)
-
-    window.addEventListener('scroll', (event) => {
-       if (window.scrollY >= sizeOfScroll) {
-        currentPart++
-        sizeOfScroll = sizeOfScroll + 1000
-        displayPosts(currentPart)
-       }
-    })
-
-     //transitions to other pages
-    const headerButtonProfile = document.getElementById('header-button-profile')
-    const headerButtonFeeds = document.getElementById('header-button-feeds')
-    headerButtonFeeds.addEventListener('click', () => location.hash = '#feeds')
-    headerButtonProfile.addEventListener('click', () => location.href = '#profile')
-}
-
 //------------------------------------------Profile---------------------------------------------
 const callbackProfile = async () => {
-    //display Page
-    const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
+
     const header = create.Header()
-    const userData = create.UserData(userEmail)
-    const userContent = create.UserContent()
-    const profile = create.UserProfile(userData, userContent)
+    const profile = create.UserProfile(create.UserData(), create.UserContent())
     const wrapper = create.Wrapper(header, profile)
-    const page = create.Page(wrapper)
-    displayPage('wrapper_body', page)
-    
-    //display User photo
-    const divUserAvatar = document.getElementById('div-user-avatar')
-    const divUserProfile = document.getElementById('div-user-profile')
-    displayUserAvatar(divUserAvatar, divUserProfile)
+    displayPage(create.Page(wrapper))
+    displayUserAvatar('div-user-avatar', 'div-user-profile')
 
     //posts creating
     const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
     const userContentEl = document.getElementById('user-content')
-    const userPosts = await sendGETRequest(`http://localhost:3000/posts/user${idUser}`)
-    if (userPosts) { userPosts.forEach( post => creatUserPosts(userContentEl, post, callbackProfile)) }
 
-    //transitions to other pages
-    const userButtonEdit = document.getElementById('user-button-edit')
-    const userButtonCreate = document.getElementById('user-button-create')
-    const headerButtonFeeds = document.getElementById('header-button-feeds')
-    const headerButtonProfile = document.getElementById('header-button-profile')
-    headerButtonProfile.addEventListener('click', () => location.hash = '#profile')
-    userButtonCreate.addEventListener('click', () => location.hash = '#createpost')
-    userButtonEdit.addEventListener('click', () => location.hash = '#edittable')
-    headerButtonFeeds.addEventListener('click', () => location.hash = '#feeds')
-
+    const userPosts = await sendFetch.GETRequest(`http://localhost:3000/posts/user${idUser}`)
+    if (userPosts) { userPosts.forEach( post => displayPosts(userContentEl, post)) }
 }
 
 //-------------------------------------------Create Post-------------------------------------
 const callbackCreatePost = async () => {
-    //display Page
-    const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
-    const header = create.Header()
-    const userData = create.UserData(userEmail)
-    const postCreating = create.PostCreating(userEmail)
-    const profile = create.UserProfile(userData, postCreating)
-    const wrapper = create.Wrapper(header, profile)
-    const page = create.Page(wrapper)
-    displayPage('wrapper_body', page)
 
-    //display User photo
-    const divUserAvatar = document.getElementById('div-user-avatar')
-    const divUserProfile = document.getElementById('div-user-profile')
-    displayUserAvatar(divUserAvatar, divUserProfile)
+    const header = create.Header()
+    const profile = create.UserProfile(create.UserData(), create.PostCreating())
+    const wrapper = create.Wrapper(header, profile)
+    displayPage(create.Page(wrapper))
+    displayUserAvatar('div-user-avatar', 'div-user-profile')
     
     //post creating
     const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
@@ -429,165 +410,24 @@ const callbackCreatePost = async () => {
     const inpunTextCreatepost = document.getElementById('inpun-text-createpost')
     const inpunButtonCreatepost = document.getElementById('inpun-button-createpost')
     const url = `http://localhost:3000/posts/${idUser}`
+
     inpunButtonCreatepost.addEventListener('click', async () => {
-        await sendPostImage(inpunFileCreatepost, inpunTextCreatepost, url)
+        await sendFetch.POSTImage(inpunFileCreatepost, inpunTextCreatepost, url)
         location.hash = '#profile'
     })
 
-    //transitions to other pages
-    const userButtonEdit = document.getElementById('user-button-edit')
-    const userButtonCreate = document.getElementById('user-button-create')
-    const headerButtonProfile = document.getElementById('header-button-profile')
-    const headerButtonFeeds = document.getElementById('header-button-feeds')
-    headerButtonProfile.addEventListener('click', () => location.hash = '#profile')
-    userButtonCreate.addEventListener('click', () => location.hash = '#createpost')
-    userButtonEdit.addEventListener('click', () => location.hash = '#edittable')
-    headerButtonFeeds.addEventListener('click', () => location.hash = '#feeds')
 }
 
 //-------------------------------------------Edit-Table-------------------------------------
 const callbackEditTable = async () => {
-
-    const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
-    
-    const htmlElem = document.createElement('div')
-    htmlElem.classList.add('wrapper_body')
-    htmlElem.setAttribute('id', 'wrapper_body')
-    htmlElem.insertAdjacentHTML('afterbegin', `
-    <div class="div_wrap">
-        <div class="wrapper_header">
-            <header class="header">
-                <h1 class="header__title">Instagram</h1>
-                <nav class="header__nav">
-                    <button class="header__button" id="header-button-main"><span class="nav__span nav__span_main">Main</span></button>
-                    <button class="header__button" id="header-button-search"><span class="nav__span nav__span_search">Search</span></button>
-                    <button class="header__button" id="header-button-interesting"><span class="nav__span nav__span_interesting">Interesting</span></button>
-                    <button class="header__button" id="header-button-messages"><span class="nav__span nav__span_messages">Messages</span></button>
-                    <button class="header__button" id="header-button-reels"><span class="nav__span nav__span_reels">Reels</span></button>
-                    <button class="header__button" id="header-button-notification"><span class="nav__span nav__span_notification">Notification</span></button>
-                    <button class="header__button" id="header-button-create"><span class="nav__span nav__span_create">Create</span></button>
-                    <button class="header__button" id="header-button-profile"><div class="header_user_avatar" id="div-user-profile"></div><span class="nav__span nav__span_profile" >Profile</span></button>
-                    <button class="header__button header__button_last" id="header-button-more"><span class="nav__span nav__span_more">More</span></button>
-                </nav>
-            </header>
-        </div>
-
-        <div class="user__profile">
-
-            <div class="user__data">
-                <div class="div_user_avatar" id="div-user-avatar"></div>
-                <div class="wrap_data">
-                    <span class="data__user_email">${userEmail}</span>
-                    <button class="data__user_button" id="user-button-edit">Edit profile</button>
-                    <button class="data__user_button">Advertising Tools</button>
-                    <button class="data__user_create" id="user-button-create">Create post</button>
-                </div>
-            </div>
-
-            <div class="modal__table_inputs">
-                <form class="modal_table_form" id="modal-table-form" action="#">  
-                    <div class="table_div"> 
-                        <span class="table__span">avatar:</span>
-                        <input class="table__button button_avatar" id="up-file" name="${userEmail}" type="file">
-                    </div>
-
-                    <div class="table_div">
-                        <span class="table__span">email:</span>
-                        <input class="table__input table__input_email input" id="inputEmailEdit" name="email" type="email" placeholder="Email">
-                    </div>
-                    <div class="table_div">
-                        <span class="table__span">pass:</span>
-                        <input class="table__input table__input_password input" id="inputPassEdit" name="password" type="text"  placeholder="Password">
-                    </div>
-                    <div class="table_div">
-                        <span class="table__span">phone:</span>
-                        <input class="table__input table__input_phone input" id="inputPhoneEdit" name="phone" type="text" placeholder="Phone">
-                    </div>
-                    <div class="table_div">
-                        <span class="table__span">country:</span>
-                        <input class="table__input table__input_country input" id="inputCountryEdit" name="country" type="text" placeholder="Country">
-                    </div>
-                    <div class="table_div">
-                        <span class="table__span">gender:</span>
-                        <select class="table__input input" name="gender" id="gender-select">
-                            <option value="male">male</option>
-                            <option value="woman">woman</option>
-                        </select>
-                    </div>
-
-
-                    <div class="table_div" name="checkbox" id="checkbox-interests">
-                        <span class="table__span">Interests:</span>
-                        <div>
-                            <div class="table__input">
-                                <input type="checkbox" id="first-checkbox" value="first checkbox">
-                                <label for="first-checkbox">first checkbox</label>
-                            </div>
-                            <div class="table__input">
-                                <input type="checkbox" id="second-checkbox" value="second checkbox">
-                                <label for="second-checkbox">second checkbox</label>
-                            </div>
-                            <div class="table__input">
-                                <input type="checkbox" id="third-checkbox" value="third checkbox">
-                                <label for="third-checkbox">third checkbox</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table_div">
-                        <span class="table__span">Marital status:</span>
-                        <div class="table__input  radio_container" name="status" id="radio-marital-status" data-radio-container>
-                            <input class="radio_married" type="radio" name="marital-status" value="married">
-                            <input class="radio_single" type="radio" name="marital-status" value="single">
-                        </div>
-                    </div>
-                    
-                    <div class="table_div">
-                        <span class="table__span">color:</span>
-                        <input class="input__color input" type="color" name="color" id="color-mail">
-                    </div>
-
-                    <div class="table_div">
-                        <span class="table__span">About you:</span>
-                        <textarea class="table__input input" id="description" name="description" placeholder="Tell about yourself:" rows="5" cols="33"></textarea>
-                    </div>
-                    <div class="table_div">
-                        <span class="table__span">Age:</span>
-                        <input class="table__input input" type="number" name="age" id="age-user">
-                    </div>
-                </form>
-
-                <button class="table__button" id="table-button-edit" data-table-btn-confirmedit="${userEmail}">edit</button>
-                <button class="table__button button_close" id="table-button-close">close</button>
-            </div>
-
-        </div>
-    </div>
-
-    `)
-    displayPage('wrapper_body', htmlElem)
-
-
-    const divUserAvatar = document.getElementById('div-user-avatar')
-    const divUserProfile = document.getElementById('div-user-profile')
-    displayUserAvatar(divUserAvatar, divUserProfile)
+    const header = create.Header()
+    const editProfile = create.EditProfile()
+    const wrapper = create.Wrapper(header, editProfile)
+    displayPage(create.Page(wrapper))
+    displayUserAvatar('div-user-avatar', 'div-user-profile')
 
 
     const upFile = document.getElementById('up-file')
-    const tableButtonEdit = document.getElementById('table-button-edit')
-    const tableButtonClose = document.getElementById('table-button-close')
-    const modalConteiner = document.querySelector('#modalConteiner')
-    const modalText = document.querySelector('#modalText')
-    const modalContent = document.querySelector('#modalContent')
-    const modalBtn = document.querySelector('#modalBnt')
-    const forEditTable = document.querySelector('#for-edit-table')
-
-    const tableOption = {
-        modal: {container: modalConteiner, forEditTable: forEditTable,content: modalContent, text: modalText, btn: modalBtn, textValue: ''},
-    }
-    const pageOptions = { elements: {table: new Table('table-users', tableOption)} }
-    const page = new Page(pageOptions)
-    
     const formOptionEditTadle = {
         inputs: [new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]),
                 new Control('inputPassEdit', [checks.minLengthEight]),
@@ -601,193 +441,44 @@ const callbackEditTable = async () => {
                 new Control('checkbox-interests', 'not checks')
             ]
     }
-    page.elements.formEditTable = new Form('form-container-edit', formOptionEditTadle)
+    const formEditTable = new Form('form-container-edit', formOptionEditTadle, 'table-button-edit')
     
 
     upFile.addEventListener('change', async () => {
-        page.sendImage(upFile, 'http://localhost:3000/uploads')
-        const img = upFile.files[0]
+        const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+        const formData = new FormData()
+        formData.append('avatar', upFile.files[0])
+        formData.append('filename', upFile.name)
+        sendFetch.PUTRequest(`http://localhost:3000/users/${userId}/avatar`, 'url',  formData)
+
+        displayUserAvatar('div-user-avatar', 'div-user-profile')
+
+        //Дописать тут
+    })
+    
+
+    formEditTable.submitButton.addEventListener('click', async (event) => {
+        event.preventDefault()
+        const isValid = formEditTable.isValidForm()
+        const formData = formEditTable.getFormData()
+        const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+
+        // if (isValid) {
+        //     const response = await sendFetch.PUTRequest(`http://localhost:3000/users/${userId}`, formData)
+
+            // (response) ? location.hash = '#' : formSignup.showError()
         
-        const reader = new FileReader()
-        reader.readAsDataURL(img)
-        reader.onload = () => {
-            const url = reader.result
-    
-            divUserAvatar.style.backgroundImage = `url(${url})`
-            divUserProfile.style.backgroundImage = `url(${url})`
-        }
-    })
-    
+        // }
 
-    tableButtonEdit.addEventListener('click', async (event) => {
-            await page.onclickEditTable()
-            location.hash = '#profile'
+        // location.hash = '#profile'
+
+        //Дописать тут
     })
 
+    const tableButtonClose = document.getElementById('table-button-close')
     tableButtonClose.addEventListener('click', () => location.hash = '#profile')
  }
 
- //-------------------------------------------View-Table-------------------------------------
- const callbackViewTable = async () => {
-
-    const check = sessionStorage.getItem('isAuthorized')
-    const userWhoView = sessionStorage.getItem('userWhoView')
-    cleanPage('form-wrapper')
-    cleanPage('table-users')
-
-//----код ниже создает табличку для ощущения нахождения на той же странице
-if(check) {
-    async function sendGETRequest(url) {
-        return await fetch(url).then(response => { return response.json() })
-    }
-
-    function createTable(users, container) {
-        if (users) {
-            for(let i = 0; i < users.length; i++) {
-                createCell(users[i].email, container)
-            }
-        }  
-    }
-
-    function createCell(userEmail, container) {
-        const elem = document.getElementById(container)
-        if (userEmail) { 
-            return elem.insertAdjacentHTML('afterbegin', `
-            <div class="table__user">
-                <span class="item__description">user:</span>
-                <span class="item__name">${userEmail}</span>
-                <div class="item__buttons">
-                    <button class="table_btn_edit" data-table-btn-edit="${userEmail}">edit</button>
-                    <button class="table_btn_delete" data-table-btn-delete="${userEmail}">delete</button>
-                    <button class="table_btn_view" data-table-btn-view="${userEmail}">view</button>
-                </div>
-            </div>
-            `)  
-        }
-    }
-
-    await sendGETRequest('http://localhost:3000/getusers')
-        .then(data => createTable(data, 'table-users'))
-}  
-
-    const tableBtnEditEl = document.querySelector('#tableBody')
-    const tableBtnDeleteEl = document.querySelector('#tableBtnDelete')
-    const tableBtnViewEl = document.querySelector('.table_btn_view')
-    const tableUsers = document.querySelector('#table-users')
-
-    const modalConteiner = document.querySelector('#modalConteiner')
-    const modalText = document.querySelector('#modalText')
-    const modalContent = document.querySelector('#modalContent')
-    const modalBtn = document.querySelector('#modalBnt')
-    const forEditTable = document.querySelector('#for-edit-table')
-
-    const tableOption = {
-        container: tableUsers,
-        btn: {edit: tableBtnEditEl, delete: tableBtnDeleteEl, view: tableBtnViewEl},
-        modal: {container: modalConteiner, forEditTable: forEditTable,content: modalContent, text: modalText, btn: modalBtn, textValue: ''},
-    }
-
-    const pageOptions = { elements: {table: new Table('table-users', tableOption)} }
-
-    const page = new Page(pageOptions)
-
-    page.elements.table.viewTableItem(userWhoView, check)
-
-
-//-------код ниже для работы модального окна 
-    
-    //------работает
-    page.elements.table.modal.btn.addEventListener('click', (event) => {
-        page.deleteEditForm()
-        page.elements.table.closeModal()
-        location.hash = '#table'
-    })
- }
-
-//-----------------------------------------Table----------------------------------------------
-const callbackTable = async () => {
-
-    const check = sessionStorage.getItem('isAuthorized')
-
-    async function sendGETRequest(url) {
-        return await fetch(url).then(response => { return response.json() })
-    }
-
-    function createTable(users, container) {
-        if (users) {
-            for(let i = 0; i < users.length; i++) {
-                createCell(users[i].email, container)
-            }
-        }  
-    }
-
-    function createCell(userEmail, container) {
-        const elem = document.getElementById(container)
-        if (userEmail) { 
-            return elem.insertAdjacentHTML('afterbegin', `
-            <div class="table__user">
-                <div class="table__conteiner">
-                    <span class="item__description">user:</span>
-                    <span class="item__name">${userEmail}</span>
-                    <div class="item__buttons">
-                        <button class="table_btn_edit" data-table-btn-edit="${userEmail}">edit</button>
-                        <button class="table_btn_delete" data-table-btn-delete="${userEmail}">delete</button>
-                        <button class="table_btn_view" data-table-btn-view="${userEmail}">view</button>
-                    </div>
-                </div>
-            </div>
-            `)  
-        }
-    }
-
-    await sendGETRequest('http://localhost:3000/getusers')
-        .then(data => createTable(data, 'table-users'))
-
-
-
-    const tableBtnEditEl = document.querySelector('#tableBody')
-    const tableBtnDeleteEl = document.querySelector('#tableBtnDelete')
-    const tableBtnViewEl = document.querySelector('.table_btn_view')
-    const tableUsers = document.querySelector('#table-users')
-
-    const modalConteiner = document.querySelector('#modalConteiner')
-    const modalText = document.querySelector('#modalText')
-    const modalContent = document.querySelector('#modalContent')
-    const modalBtn = document.querySelector('#modalBnt')
-    const forEditTable = document.querySelector('#for-edit-table')
- 
-    const tableOption = {
-        container: tableUsers,
-        btn: {edit: tableBtnEditEl, delete: tableBtnDeleteEl, view: tableBtnViewEl},
-        modal: {container: modalConteiner, forEditTable: forEditTable,content: modalContent, text: modalText, btn: modalBtn, textValue: ''},
-    }
-
-    const pageOptions = { elements: {table: new Table('table-users', tableOption)} }
-
-    const page = new Page(pageOptions)
-
-    page.sendGETRequest('http://localhost:3000/getusers')
-        .then(data => page.users = data)
-
-
-//------работает
-    page.elements.table.container.addEventListener('click', (event) => {
-        if (event.target.dataset.tableBtnView) {
-            sessionStorage.setItem('userWhoView', event.target.dataset.tableBtnView)
-            location.hash = '#viewtable'
-        }
-    })
-    
-//------работает (но нужно доработать)
-    page.elements.table.container.addEventListener('click', event => {
-        if (event.target.dataset.tableBtnEdit) {
-            sessionStorage.setItem('userWhoEdit', event.target.dataset.tableBtnEdit)
-            location.hash = '#edittable'
-            radio()
-        }
-    })
-    
-}
 
 
 
@@ -819,11 +510,6 @@ const routes = {
         title: 'Signup',
         script: callbackProfile
     },
-    
-    table: {
-        title: 'Table',
-        script: callbackTable
-    },
 
     feeds: {
         title: 'Table',
@@ -833,11 +519,6 @@ const routes = {
     edittable: {
         title: 'Edit Table',
         script: callbackEditTable
-    },
-
-    viewtable: {
-        title: 'View Table',
-        script: callbackViewTable
     },
 
     createpost: {

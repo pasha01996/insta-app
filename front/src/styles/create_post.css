@@ -26,6 +26,15 @@
   align-content: center;
 }
 
+.modal_post_description {
+  margin-top: 10px;
+  width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+}
+
 .user_description_post {
   border: none;
   font-size: 18px;

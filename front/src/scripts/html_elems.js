@@ -46,31 +46,32 @@ export const create = {
     registrationPage: () => {
         const registrationPage = document.createElement('div')
         registrationPage.classList.add('wrapper')
-        registrationPage.insertAdjacentElement('afterbegin', `
-        <div class="form__container form__signup" id="form-container-signin">
+        registrationPage.insertAdjacentHTML('afterbegin', `
+            <div class="form__container form__signup" id="form-container-signin">
 
-            <div class="form_header">
-                <h2 class="form__title">Instagram</h2>
-                <span class="form__title_description">Register to see photos and videos of your friends.</span>
-                <button class="form__button"><span class="form__span_facebook">Login with Facebook</span></button>
-                <span class="form__border">Or</span>
-                <form class="form__signin" id="form-signin" action="#">
-                    <input class="form__input" id="inputEmailSignup" type="email" name="email" placeholder="Email" id="email">
-                    <input class="form__input" id="inputPassSignup" type="password" name="password" placeholder="Password">
-                    <input class="form__input" id="inputPhoneSignup" type="tel" name="phone" placeholder="Phone">
-                    <input class="form__input" id="inputCountrySignup" type="text" name="country" placeholder="Country">
-                    <input class="form__button" id="inputSubmitSignup" type="submit" value="Registration">
-                </form>
-                <span class="form__span_facebook">Login with Facebook</span>
+                <div class="form_header">
+                    <h2 class="form__title">Instagram</h2>
+                    <span class="form__title_description">Register to see photos and videos of your friends.</span>
+                    <button class="form__button"><span class="form__span_facebook">Login with Facebook</span></button>
+                    <span class="form__border">Or</span>
+                    <form class="form__signin" id="form-signin" action="#">
+                        <input class="form__input" id="inputEmailSignup" type="email" name="email" placeholder="Email" id="email">
+                        <input class="form__input" id="inputPassSignup" type="password" name="password" placeholder="Password">
+                        <input class="form__input" id="inputPhoneSignup" type="tel" name="phone" placeholder="Phone">
+                        <input class="form__input" id="inputCountrySignup" type="text" name="country" placeholder="Country">
+                        <input class="form__button" id="inputSubmitSignup" type="submit" value="Registration">
+                    </form>
+                    <span class="form__span_facebook">Login with Facebook</span>
+                </div>
+
+                <div class="form__footer">
+                    <span class="form__text">Have an account?</span>
+                    <a href="#" class="form__link_switch">Sign in</a>
+                </div>
+
             </div>
-
-            <div class="form__footer">
-                <span class="form__text">Have an account?</span>
-                <a href="#" class="form__link_switch">Sign in</a>
-            </div>
-
-        </div>
         `)
+
         return registrationPage
     },
 
@@ -179,19 +180,8 @@ export const create = {
     EditProfile: () => {
         const userEmail = JSON.parse(sessionStorage.getItem('whoAuthorized')).email
         const editProfile = document.createElement('div')
-        editProfile.classList.add('user__profile')
+        editProfile.classList.add('modal__table_inputs')
         editProfile.insertAdjacentHTML('afterbegin', `
-        <div class="user__data">
-            <div class="div_user_avatar" id="div-user-avatar"></div>
-            <div class="wrap_data">
-                <span class="data__user_email">${userEmail}</span>
-                <button class="data__user_button" id="user-button-edit">Edit profile</button>
-                <button class="data__user_button">Advertising Tools</button>
-                <button class="data__user_create" id="user-button-create">Create post</button>
-            </div>
-        </div>
-
-        <div class="modal__table_inputs">
             <form class="modal_table_form" id="modal-table-form" action="#">  
                 <div class="table_div"> 
                     <span class="table__span">avatar:</span>
@@ -265,8 +255,6 @@ export const create = {
             </form>
 
             <button class="table__button" id="table-button-edit" data-table-btn-confirmedit="${userEmail}">edit</button>
-            <button class="table__button button_close" id="table-button-close">close</button>
-        </div>
         `)
         return editProfile
     },

@@ -9,7 +9,7 @@ export class Form {
 
     getValues() {
         let controlsValues = []
-        for (let i = 0; i <this.inputs.length; i++) {
+        for (let i = 0; i < this.inputs.length; i++) {
             if (this.inputs[i].startChecks()) {
                 controlsValues.push(this.inputs[i].getValue())
             } else {this.inputs[i].showError()}

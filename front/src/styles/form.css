@@ -135,3 +135,6 @@
 .form__signup .form__input_error::-webkit-input-placeholder {
   color: #ff0000;
 }
+.form__signup .form__input_error {
+  color: #ff0000;
+}

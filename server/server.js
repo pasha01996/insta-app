@@ -92,26 +92,25 @@ app.get('/users', async (req, res) => {
     res.send(users)
 })
 
-//----х----
 app.put('/users/:id', async (req, res) => {
     const userId = new ObjectId(req.params.id)
-    const update = req.body
-    const users = await client.db().collection('users')
-    const userToFind = await users.findOne({_id: userId})
-    console.log(update)
+    const body = req.body
+    const update = body.update
+    const collection = await client.db().collection('users')
+    await collection.findOneAndUpdate({_id: userId}, {$set: {...update}})
     res.send('')
 })
 
-app.put('users/:id/avatar',upload.single('avatar'), async (req, res) => {
+app.put('/users/:id/avatar', upload.single('avatar'), async (req, res) => {
     const date = moment().format('DDMMYYYY-HHmmss_SSS')
     const imgName = `uploads/${date}-${req.body.filename}.JPG`
     fs.rename(`uploads/${req.file.fieldname}.JPG`, imgName, (err) => { if(err) { throw err} })
 
     const userId = new ObjectId(req.params.id)
     const collection = await client.db().collection('users')
-    await collection.findOneAndUpdate({_id: userId}, {url: imgName})
-
-    res.send('')
+    const url = `http://localhost:3000/${imgName}`
+    await collection.findOneAndUpdate({_id: userId}, {$set:{url: url}})
+    res.send({url})
 })
 
 

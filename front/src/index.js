@@ -27,13 +27,20 @@ const displayPage = async (htmlElem) => {
 }
 
 const displayUserAvatar = async (...args) => {
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
-    const user = await sendFetch.GETRequest(`http://localhost:3000/users/${idUser}`)
+    const imgUrl = JSON.parse(sessionStorage.getItem('whoAuthorized')).url
 
     args.forEach( elem => {
         const userImg = document.getElementById(elem)
-        userImg.style.backgroundImage = `url(${user.url})`
+        userImg.style.backgroundImage = `url(${imgUrl})`
     })
+}
+
+const updateUserAvatar = async () => {
+    const user = JSON.parse(sessionStorage.getItem('whoAuthorized'))
+    const url = `http://localhost:3000/users/${user._id}`
+    const res = await sendFetch.GETRequest(url)
+
+    sessionStorage.setItem('whoAuthorized', JSON.stringify(res))
 }
 
 const createDataForRequest = (userEmail, userUrl, userId, comment) => {
@@ -322,8 +329,11 @@ const callbackSignupForm = async () => {
         
         if (isValid) {
             const response = await sendFetch.POSTRequest(urls.users, formData)
-            (response) ? location.hash = '#' : formSignup.showError()
-        
+            if (response) {
+                location.hash = '#'
+            } else {
+                formSignup.showError()
+            }
         }
 
     })
@@ -421,39 +431,35 @@ const callbackCreatePost = async () => {
 //-------------------------------------------Edit-Table-------------------------------------
 const callbackEditTable = async () => {
     const header = create.Header()
-    const editProfile = create.EditProfile()
-    const wrapper = create.Wrapper(header, editProfile)
+    const profile = create.UserProfile(create.UserData(), create.EditProfile())
+    const wrapper = create.Wrapper(header, profile)
     displayPage(create.Page(wrapper))
     displayUserAvatar('div-user-avatar', 'div-user-profile')
 
 
     const upFile = document.getElementById('up-file')
-    const formOptionEditTadle = {
-        inputs: [new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]),
-                new Control('inputPassEdit', [checks.minLengthEight]),
-                new Control('inputPhoneEdit', [checks.minLengthEight, checks.firstLetterPlus]),
-                new Control('inputCountryEdit', [checks.minLengthEight]),
-                new Control('radio-marital-status', 'not checks'),
-                new Control('gender-select', 'not checks'),
-                new Control('color-mail', 'not checks'),
-                new Control('description', 'not checks'),
-                new Control('age-user', 'not checks'),
-                new Control('checkbox-interests', 'not checks')
-            ]
-    }
+    const formOptionEditTadle = [
+        new Control('inputEmailEdit', [checks.includesAt, checks.minLengthEight]),
+        new Control('inputPassEdit', [checks.minLengthEight]),
+        new Control('inputPhoneEdit', [checks.firstLetterPlus, checks.minLengthEight]),
+        new Control('inputCountryEdit', [checks.minLengthEight]),
+        new Control('radio-marital-status', 'not checks'),
+        new Control('gender-select', 'not checks'),
+        new Control('color-mail', 'not checks'),
+        new Control('description', 'not checks'),
+        new Control('age-user', 'not checks'),
+        new Control('checkbox-interests', 'not checks')
+    ]
     const formEditTable = new Form('form-container-edit', formOptionEditTadle, 'table-button-edit')
     
 
     upFile.addEventListener('change', async () => {
         const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
-        const formData = new FormData()
-        formData.append('avatar', upFile.files[0])
-        formData.append('filename', upFile.name)
-        sendFetch.PUTRequest(`http://localhost:3000/users/${userId}/avatar`, 'url',  formData)
+        const url = `http://localhost:3000/users/${userId}/avatar`
+        await sendFetch.PUTImage(upFile, url)
 
+        await updateUserAvatar()
         displayUserAvatar('div-user-avatar', 'div-user-profile')
-
-        //Дописать тут
     })
     
 
@@ -462,24 +468,23 @@ const callbackEditTable = async () => {
         const isValid = formEditTable.isValidForm()
         const formData = formEditTable.getFormData()
         const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+        console.log(isValid)
+        console.log(formData)
+        if (isValid) {
+            await sendFetch.PUTRequest(`http://localhost:3000/users/${userId}`, 'update', formData)
+            location.hash = '#profile'
+        } else {
+            formEditTable.showError()
+        }
 
-        // if (isValid) {
-        //     const response = await sendFetch.PUTRequest(`http://localhost:3000/users/${userId}`, formData)
-
-            // (response) ? location.hash = '#' : formSignup.showError()
-        
-        // }
-
-        // location.hash = '#profile'
-
-        //Дописать тут
     })
-
-    const tableButtonClose = document.getElementById('table-button-close')
-    tableButtonClose.addEventListener('click', () => location.hash = '#profile')
  }
 
+ //-------------------------------------------Search-------------------------------------
+const callbackSearch = async () => {
+ 
 
+}
 
 
 
@@ -504,6 +509,11 @@ const routes = {
     main: {
         title: 'Signup',
         script: callbackMainPage
+    },
+
+    search: {
+        title: 'Search',
+        script: callbackSearch
     },
 
     profile: {

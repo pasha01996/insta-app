@@ -8,9 +8,7 @@ export const radio = function () {
         for (let i = 0; i < inputs.length; i++) {
             if (inputs[i].checked) {
                 container.value = inputs[i].value
-                console.log(container.value)
                 break
-                
             }
         }
     }

@@ -10,7 +10,18 @@ export const sendFetch = {
             body: formData
         })
     },
-    
+
+    PUTImage: async (input, url) => {
+        const formData = new FormData()
+        formData.append('avatar', input.files[0])
+        formData.append('filename', input.name)
+        
+        await fetch(url, {
+            method: 'PUT',
+            body: formData
+        }).then(response => { return response.json() })
+    },
+
     POSTRequest: async function (url, data) {
         return await fetch(url, {
            method: 'POST',

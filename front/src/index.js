@@ -22,25 +22,36 @@ let isAuthorized = false
 let isRegistered = false
 //-------------------------------------functions-----------------------------------------
 
+const setSessionStorage = (name, data) => {
+    sessionStorage.setItem(name, JSON.stringify(data))
+}
+
+const getSessionStorage = (name) => {
+    return JSON.parse(sessionStorage.getItem(name))
+}
+
+const changeLocation = (hash) => {
+    location.hash = `${hash}`
+}
+
 const displayPage = async (htmlElem) => {
     await new Promise((res, rej) => res(document.getElementById('wrapper_body').replaceWith(htmlElem)))
 }
 
 const displayUserAvatar = async (...args) => {
-    const imgUrl = JSON.parse(sessionStorage.getItem('whoAuthorized')).url
+    const user = getSessionStorage('whoAuthorized')
 
     args.forEach( elem => {
         const userImg = document.getElementById(elem)
-        userImg.style.backgroundImage = `url(${imgUrl})`
+        userImg.style.backgroundImage = `url(${user.url})`
     })
 }
 
 const updateUserAvatar = async () => {
-    const user = JSON.parse(sessionStorage.getItem('whoAuthorized'))
+    const user = getSessionStorage('whoAuthorized')
     const url = `http://localhost:3000/users/${user._id}`
     const res = await sendFetch.GETRequest(url)
-
-    sessionStorage.setItem('whoAuthorized', JSON.stringify(res))
+    setSessionStorage('whoAuthorized', res)
 }
 
 const createDataForRequest = (userEmail, userUrl, userId, comment) => {
@@ -129,7 +140,6 @@ const createPost = async (wrapper, data) => {
 
 const createComments = async (wrapper, data, idPost) => {
     const commentData = data
-    console.log(commentData)
 
     const sectionComments = document.createElement('div')
     sectionComments.classList.add('modal__main')
@@ -162,11 +172,10 @@ const createComments = async (wrapper, data, idPost) => {
 
             //add events
             buttonDelete.addEventListener('click', async (event) => {
-                const loginUserID = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+                const user = getSessionStorage('whoAuthorized')
                 const userWantDeleteID = event.target.dataset.userId
-                console.log(loginUserID)
-                console.log(userWantDeleteID)
-                if (loginUserID === userWantDeleteID) {
+               
+                if (user._id === userWantDeleteID) {
                     const commentID = event.target.dataset.commentId
                     const url = `http://localhost:3000/posts/${commentID}/comments`
                     sendFetch.DELETERequest(url)
@@ -272,7 +281,9 @@ const displayPosts = async (wrapper, obj) => {
     htmlElem.append(divImg)
     wrapper.append(htmlElem)
 }
- 
+
+
+
 
 
 //--------------------------------------Signin / #------------------------------------
@@ -285,11 +296,11 @@ const callbackFirstPage = async () => {
         new Control('inputEmailSignin', [checks.includesAt, checks.minLengthEight]),
         new Control('inputPassSignin', [checks.minLengthEight])
     ]
-    const formSignin = new Form ('form-container-signin', imputsFormSignin, 'inputSubmitSignin')
-    
-    
+    const formSignin = new Form (imputsFormSignin, 'inputSubmitSignin')
+
     formSignin.submitButton.addEventListener('click', async (event) => {
         event.preventDefault()
+
         const isValid = formSignin.isValidForm()
         const formData = formSignin.getFormData()
     
@@ -297,8 +308,8 @@ const callbackFirstPage = async () => {
             const response = await sendFetch.POSTRequest(urls.login, formData)
 
             if (response.check) {
-                sessionStorage.setItem('whoAuthorized', JSON.stringify(response.user))
-                location.hash = '#feeds'
+                setSessionStorage('whoAuthorized', response.user)
+                changeLocation('#feeds')
             } else {
                 formSignin.showError()
             }
@@ -319,7 +330,7 @@ const callbackSignupForm = async () => {
         new Control('inputPhoneSignup', [checks.minLengthEight, checks.firstLetterPlus]),
         new Control('inputCountrySignup', [checks.minLengthEight])
     ]
-    const formSignup = new Form('form-container-signup', imputsFormSignup, 'inputSubmitSignup')
+    const formSignup = new Form(imputsFormSignup, 'inputSubmitSignup')
  
     
     formSignup.submitButton.addEventListener('click', async (event) => {
@@ -330,7 +341,7 @@ const callbackSignupForm = async () => {
         if (isValid) {
             const response = await sendFetch.POSTRequest(urls.users, formData)
             if (response) {
-                location.hash = '#'
+                changeLocation('#')
             } else {
                 formSignup.showError()
             }
@@ -367,24 +378,8 @@ const callbackFeeds = async () => {
 
 }
 
-
 //-------------------------------------------Main-----------------------------------------------
 const callbackMainPage = async () => {
-    //display Page
-    const header = create.Header()
-    const wrapper = create.Wrapper(header, 'main')
-    const page = create.Page(wrapper)
-    displayPage('wrapper_body', page)
-
-    //display User photo    
-    const divUserProfile = document.getElementById('div-user-profile')
-    displayUserAvatar(divUserProfile)
-    
-    //transitions to other pages
-    const headerButtonProfile = document.getElementById('header-button-profile')
-    const headerButtonFeeds = document.getElementById('header-button-interesting')
-    headerButtonFeeds.addEventListener('click', () => location.hash = '#feeds')
-    headerButtonProfile.addEventListener('click', () => location.href = '#profile')
 
 }
 
@@ -398,10 +393,10 @@ const callbackProfile = async () => {
     displayUserAvatar('div-user-avatar', 'div-user-profile')
 
     //posts creating
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+    const user = getSessionStorage('whoAuthorized')
     const userContentEl = document.getElementById('user-content')
 
-    const userPosts = await sendFetch.GETRequest(`http://localhost:3000/posts/user${idUser}`)
+    const userPosts = await sendFetch.GETRequest(`http://localhost:3000/posts/user${user._id}`)
     if (userPosts) { userPosts.forEach( post => displayPosts(userContentEl, post)) }
 }
 
@@ -415,15 +410,15 @@ const callbackCreatePost = async () => {
     displayUserAvatar('div-user-avatar', 'div-user-profile')
     
     //post creating
-    const idUser = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+    const user = getSessionStorage('whoAuthorized')
     const inpunFileCreatepost = document.getElementById('inpun-file-createpost')
     const inpunTextCreatepost = document.getElementById('inpun-text-createpost')
     const inpunButtonCreatepost = document.getElementById('inpun-button-createpost')
-    const url = `http://localhost:3000/posts/${idUser}`
+    const url = `http://localhost:3000/posts/${user._id}`
 
     inpunButtonCreatepost.addEventListener('click', async () => {
         await sendFetch.POSTImage(inpunFileCreatepost, inpunTextCreatepost, url)
-        location.hash = '#profile'
+        changeLocation('#profile')
     })
 
 }
@@ -450,12 +445,12 @@ const callbackEditTable = async () => {
         new Control('age-user', 'not checks'),
         new Control('checkbox-interests', 'not checks')
     ]
-    const formEditTable = new Form('form-container-edit', formOptionEditTadle, 'table-button-edit')
+    const formEditTable = new Form(formOptionEditTadle, 'table-button-edit')
     
 
     upFile.addEventListener('change', async () => {
-        const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
-        const url = `http://localhost:3000/users/${userId}/avatar`
+        const user = getSessionStorage('whoAuthorized')
+        const url = `http://localhost:3000/users/${user._id}/avatar`
         await sendFetch.PUTImage(upFile, url)
 
         await updateUserAvatar()
@@ -467,12 +462,13 @@ const callbackEditTable = async () => {
         event.preventDefault()
         const isValid = formEditTable.isValidForm()
         const formData = formEditTable.getFormData()
-        const userId = JSON.parse(sessionStorage.getItem('whoAuthorized'))._id
+        const user = getSessionStorage('whoAuthorized')
         console.log(isValid)
         console.log(formData)
         if (isValid) {
-            await sendFetch.PUTRequest(`http://localhost:3000/users/${userId}`, 'update', formData)
-            location.hash = '#profile'
+            const url = `http://localhost:3000/users/${user._id}`
+            await sendFetch.PUTRequest(url, 'update', formData)
+            changeLocation('#profile')
         } else {
             formEditTable.showError()
         }

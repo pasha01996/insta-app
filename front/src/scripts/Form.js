@@ -1,8 +1,6 @@
 
 export class Form {
-    constructor(id, imputs, submitButton) {
-        this.id = id
-        this.container = document.getElementById(id)
+    constructor( imputs, submitButton) {
         this.inputs = imputs
         this.submitButton = document.getElementById(submitButton)
     }

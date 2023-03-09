@@ -101,7 +101,7 @@ app.put('/users/:id', async (req, res) => {
     res.send('')
 })
 
-app.put('/users/:id/avatar', upload.single('avatar'), async (req, res) => {
+app.put('/users/avatar:id', upload.single('avatar'), async (req, res) => {
     const date = moment().format('DDMMYYYY-HHmmss_SSS')
     const imgName = `uploads/${date}-${req.body.filename}.JPG`
     fs.rename(`uploads/${req.file.fieldname}.JPG`, imgName, (err) => { if(err) { throw err} })
@@ -255,7 +255,7 @@ app.put('/posts/like:id', async(req, res) => {
 
 
 //---------comments----------
-app.post('/posts/:id/comments', async(req, res) => {
+app.post('/posts/comments/:id', async(req, res) => {
     const update = req.body
     const postId = req.params.id
     const collection = await client.db().collection('comments')
@@ -267,7 +267,7 @@ app.post('/posts/:id/comments', async(req, res) => {
     res.send(sendComment)
 })
 
-app.get('/posts/:id/comments', async(req, res) => {
+app.get('/posts/comments/:id', async(req, res) => {
     const postId = req.params.id
     const collection = await client.db().collection('comments')
     const findAllPost = await collection.find({postID: postId}).toArray()
@@ -276,7 +276,7 @@ app.get('/posts/:id/comments', async(req, res) => {
     res.send(findAllPost)
 })
 
-app.delete('/posts/:id/comments', async(req, res) => {
+app.delete('/posts/comments/:id', async(req, res) => {
     const commentId = new ObjectId(req.params.id)
     const collection = await client.db().collection('comments')
     collection.findOneAndDelete({_id: commentId})
@@ -284,7 +284,7 @@ app.delete('/posts/:id/comments', async(req, res) => {
     res.send('')
 })
 
-app.post('/posts/:id/commentTocomment', async(req, res) => {
+app.post('/posts/commentTocomment/:id', async(req, res) => {
     const update = req.body
     const commentId = new ObjectId(req.params.id)
     const collection = await client.db().collection('comments')

@@ -2,8 +2,10 @@ const path = require('path')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 const {CleanWebpackPlugin} = require('clean-webpack-plugin')
 
+
+
 module.exports = {
-    context: path.resolve(__dirname, 'src'),
+    context: path.resolve(__dirname),
     mode: 'development',
     entry: './index.js',
     watch: true,
@@ -20,7 +22,30 @@ module.exports = {
     ],
     module: {
         rules: [
-            {test: /\.css$/, use: ['style-loader', 'css-loader']}
+            {
+                test: /\.sass$/,
+                exclude: /node_modules/,
+                use: [{
+                    loader: 'style-loader',
+                },
+                {
+                    loader: 'css-loader',
+                    options: {
+                        sourceMap: true,
+                    },
+                },
+                {
+                    loader: 'sass-loader',
+                    options: {
+                        sourceMap: true,
+                    },
+                },
+                ]
+            },
+
+            {
+                test: /\.html$/, use: 'html-loader'
+            }
         ]
     }
 }
